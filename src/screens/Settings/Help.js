@@ -8,6 +8,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
+import { back_icon, email_icon, phone_icon } from '../../assets/icons';
 
 const Help = ({navigation}) => {
   const faqItems = [
@@ -35,7 +36,7 @@ const Help = ({navigation}) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
           <Image
-            source={require('../../styles/back_icon.png')}
+            source={back_icon}
             style={styles.backIcon}
           />
         </TouchableOpacity>
@@ -57,7 +58,7 @@ const Help = ({navigation}) => {
           <Text style={styles.sectionTitle}>İletişim</Text>
           <TouchableOpacity style={styles.contactItem}>
             <Image
-              source={require('../../styles/email_icon.png')}
+              source={email_icon}
               style={styles.contactIcon}
             />
             <Text style={styles.contactText}>destek@kahveapp.com</Text>
@@ -65,7 +66,7 @@ const Help = ({navigation}) => {
 
           <TouchableOpacity style={styles.contactItem}>
             <Image
-              source={require('../../styles/phone_icon.png')}
+              source={phone_icon}
               style={styles.contactIcon}
             />
             <Text style={styles.contactText}>0850 123 45 67</Text>

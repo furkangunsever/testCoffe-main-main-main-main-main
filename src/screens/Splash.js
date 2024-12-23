@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
 import {View, Image, StyleSheet} from 'react-native';
+import { splash_coffe, splash_text } from '../assets/images';
 
 const Splash = ({navigation}) => {
   useEffect(() => {
@@ -13,12 +14,12 @@ const Splash = ({navigation}) => {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../styles/splash_coffe.png')}
+        source={splash_coffe}
         style={styles.coffeeImage}
         resizeMode="contain"
       />
       <Image
-        source={require('../styles/splash_text.png')}
+        source={splash_text}
         style={styles.textImage}
         resizeMode="contain"
       />

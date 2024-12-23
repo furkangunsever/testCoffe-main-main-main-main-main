@@ -16,6 +16,7 @@ import QRScanner from './QRScanner';
 import SuperAdminHome from './SuperAdminHome';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
+import { cıkıs_icon, home_icon, profile_icon, qr_icon } from '../../assets/icons';
 
 const Tab = createBottomTabNavigator();
 
@@ -77,7 +78,7 @@ const SuperAdmin = () => {
         <Text style={styles.headerTitle}>Super Admin Panel</Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Image
-            source={require('../../styles/cıkıs_icon.png')}
+            source={cıkıs_icon}
             style={styles.logoutIcon}
           />
         </TouchableOpacity>
@@ -101,7 +102,7 @@ const SuperAdmin = () => {
           options={{
             tabBarIcon: ({focused}) => (
               <Image
-                source={require('../../styles/home_icon.png')}
+                source={home_icon}
                 style={{
                   width: 24,
                   height: 24,
@@ -117,7 +118,7 @@ const SuperAdmin = () => {
           options={{
             tabBarIcon: ({focused}) => (
               <Image
-                source={require('../../styles/profile_icon.png')}
+                source={profile_icon}
                 style={{
                   width: 24,
                   height: 24,
@@ -133,7 +134,7 @@ const SuperAdmin = () => {
           options={{
             tabBarIcon: ({focused}) => (
               <Image
-                source={require('../../styles/profile_icon.png')}
+                source={profile_icon}
                 style={{
                   width: 24,
                   height: 24,
@@ -149,7 +150,7 @@ const SuperAdmin = () => {
           options={{
             tabBarIcon: ({focused}) => (
               <Image
-                source={require('../../styles/qr_icon.png')}
+                source={qr_icon}
                 style={{
                   width: 24,
                   height: 24,

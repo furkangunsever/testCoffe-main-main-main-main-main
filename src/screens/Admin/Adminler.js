@@ -13,6 +13,8 @@ import {
 import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
 import {deleteAdmin} from '../../config/firebase';
+import { user_icon } from '../../assets/images';
+import { delete_icon, empty_icon } from '../../assets/icons';
 
 const Adminler = () => {
   const [admins, setAdmins] = useState([]);
@@ -74,7 +76,7 @@ const Adminler = () => {
       <View style={styles.adminInfo}>
         <View style={styles.avatarContainer}>
           <Image
-            source={require('../../styles/user_icon.png')}
+            source={user_icon}
             style={styles.avatar}
           />
         </View>
@@ -92,7 +94,7 @@ const Adminler = () => {
           handleDeleteAdmin(item.id, `${item.name} ${item.surname}`)
         }>
         <Image
-          source={require('../../styles/delete_icon.png')}
+          source={delete_icon}
           style={styles.deleteIcon}
         />
       </TouchableOpacity>
@@ -128,7 +130,7 @@ const Adminler = () => {
       ) : (
         <View style={styles.emptyContainer}>
           <Image
-            source={require('../../styles/empty_icon.png')}
+            source={empty_icon}
             style={styles.emptyIcon}
           />
           <Text style={styles.emptyText}>Henüz admin bulunmamaktadır.</Text>

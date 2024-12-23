@@ -8,6 +8,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
+import { back_icon } from '../../assets/icons';
 
 const Privacy = ({navigation}) => {
   return (
@@ -17,7 +18,7 @@ const Privacy = ({navigation}) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
           <Image
-            source={require('../../styles/back_icon.png')}
+            source={back_icon}
             style={styles.backIcon}
           />
         </TouchableOpacity>

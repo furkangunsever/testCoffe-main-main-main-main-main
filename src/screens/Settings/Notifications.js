@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import { back_icon } from '../../assets/icons';
 
 const Notifications = ({navigation}) => {
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -26,7 +27,7 @@ const Notifications = ({navigation}) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
           <Image
-            source={require('../../styles/back_icon.png')}
+            source={back_icon}
             style={styles.backIcon}
           />
         </TouchableOpacity>

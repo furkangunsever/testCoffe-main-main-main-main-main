@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {addAdmin} from '../../config/firebase';
+import { add_user_icon, email_icon, eye, eye_off, password_icon } from '../../assets/icons';
 
 const AdminEkle = ({cafeName}) => {
   const [email, setEmail] = useState('');
@@ -79,8 +80,8 @@ const AdminEkle = ({cafeName}) => {
           <Image
             source={
               showPassword
-                ? require('../../styles/eye_off.png')
-                : require('../../styles/eye.png')
+                ? eye_off
+                : eye
             }
             style={styles.eyeIcon}
           />
@@ -102,7 +103,7 @@ const AdminEkle = ({cafeName}) => {
         style={styles.formContainer}
         showsVerticalScrollIndicator={false}>
         <InputField
-          icon={require('../../styles/user_icon.png')}
+          icon={add_user_icon}
           placeholder="Ad"
           value={name}
           onChangeText={setName}
@@ -110,7 +111,7 @@ const AdminEkle = ({cafeName}) => {
         />
 
         <InputField
-          icon={require('../../styles/user_icon.png')}
+          icon={add_user_icon}
           placeholder="Soyad"
           value={surname}
           onChangeText={setSurname}
@@ -118,7 +119,7 @@ const AdminEkle = ({cafeName}) => {
         />
 
         <InputField
-          icon={require('../../styles/email_icon.png')}
+          icon={email_icon}
           placeholder="E-mail"
           value={email}
           onChangeText={setEmail}
@@ -126,7 +127,7 @@ const AdminEkle = ({cafeName}) => {
         />
 
         <InputField
-          icon={require('../../styles/password_icon.png')}
+          icon={password_icon}
           placeholder="Şifre"
           value={password}
           onChangeText={setPassword}
@@ -142,7 +143,7 @@ const AdminEkle = ({cafeName}) => {
           ) : (
             <>
               <Image
-                source={require('../../styles/add_user_icon.png')}
+                source={add_user_icon}
                 style={styles.addIcon}
               />
               <Text style={styles.addButtonText}>Admin Ekle</Text>

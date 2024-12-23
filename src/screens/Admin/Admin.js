@@ -11,6 +11,7 @@ import {
 import QRScanner from './QRScanner';
 import AdminHome from './AdminHome'; // Mevcut Admin içeriğini buraya taşıyacağız
 import auth from '@react-native-firebase/auth';
+import { cıkıs_icon, home_icon, qr_icon } from '../../assets/icons';
 
 const Tab = createBottomTabNavigator();
 
@@ -34,7 +35,7 @@ const Admin = () => {
         <Text style={styles.headerTitle}>Admin Panel</Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Image
-            source={require('../../styles/cıkıs_icon.png')}
+            source={cıkıs_icon}
             style={styles.logoutIcon}
           />
         </TouchableOpacity>
@@ -58,7 +59,7 @@ const Admin = () => {
           options={{
             tabBarIcon: ({focused}) => (
               <Image
-                source={require('../../styles/home_icon.png')}
+                source={home_icon}
                 style={{
                   width: 24,
                   height: 24,
@@ -74,7 +75,7 @@ const Admin = () => {
           options={{
             tabBarIcon: ({focused}) => (
               <Image
-                source={require('../../styles/qr_icon.png')}
+                source={qr_icon}
                 style={{
                   width: 24,
                   height: 24,

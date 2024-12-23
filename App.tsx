@@ -20,6 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Notifications from './src/screens/Settings/Notifications';
 import Privacy from './src/screens/Settings/Privacy';
 import Help from './src/screens/Settings/Help';
+import { anasayfa_icon, kuponlarım_icon, profil_icon } from './src/assets/icons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -43,7 +44,7 @@ const TabNavigator = () => {
         options={{
           tabBarIcon: ({focused}) => (
             <Image
-              source={require('./src/styles/anasayfa_icon.png')}
+              source={anasayfa_icon}
               style={{
                 width: 24,
                 height: 24,
@@ -59,7 +60,7 @@ const TabNavigator = () => {
         options={{
           tabBarIcon: ({focused}) => (
             <Image
-              source={require('./src/styles/kuponlarım_icon.png')}
+              source={kuponlarım_icon}
               style={{
                 width: 24,
                 height: 24,
@@ -75,7 +76,7 @@ const TabNavigator = () => {
         options={{
           tabBarIcon: ({focused}) => (
             <Image
-              source={require('./src/styles/profil_icon.png')}
+              source={profil_icon}
               style={{
                 width: 24,
                 height: 24,

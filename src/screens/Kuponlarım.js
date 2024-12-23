@@ -12,6 +12,7 @@ import {
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 import QRCode from 'react-native-qrcode-svg';
+import { kart_icon } from '../assets/icons';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -87,7 +88,7 @@ const Kuponlarım = () => {
         style={styles.card}
         onPress={() => setSelectedCoupon(coupon)}>
         <Image
-          source={require('../styles/kart_icon.png')}
+          source={kart_icon}
           style={styles.cardIcon}
         />
         <View style={styles.cardContent}>

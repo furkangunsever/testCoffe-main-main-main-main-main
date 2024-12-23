@@ -13,6 +13,8 @@ import {
   Dimensions,
 } from 'react-native';
 import {signUp} from '../config/firebase';
+import { splash_coffe, user_icon } from '../assets/images';
+import { email_icon, eye, eye_off, password_icon } from '../assets/icons';
 
 const {width} = Dimensions.get('window');
 
@@ -88,7 +90,7 @@ const Kayıt = ({navigation}) => {
         keyboardShouldPersistTaps="handled">
         <View style={styles.logoContainer}>
           <Image
-            source={require('../styles/splash_coffe.png')}
+            source={splash_coffe}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -103,7 +105,7 @@ const Kayıt = ({navigation}) => {
           <View style={styles.inputGroup}>
             <View style={styles.inputContainer}>
               <Image
-                source={require('../styles/user_icon.png')}
+                source={user_icon}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -117,7 +119,7 @@ const Kayıt = ({navigation}) => {
 
             <View style={styles.inputContainer}>
               <Image
-                source={require('../styles/user_icon.png')}
+                source={user_icon}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -131,7 +133,7 @@ const Kayıt = ({navigation}) => {
 
             <View style={styles.inputContainer}>
               <Image
-                source={require('../styles/email_icon.png')}
+                source={email_icon}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -147,7 +149,7 @@ const Kayıt = ({navigation}) => {
 
             <View style={styles.inputContainer}>
               <Image
-                source={require('../styles/password_icon.png')}
+                source={password_icon}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -164,8 +166,8 @@ const Kayıt = ({navigation}) => {
                 <Image
                   source={
                     showPassword
-                      ? require('../styles/eye_off.png')
-                      : require('../styles/eye.png')
+                      ? eye_off
+                      : eye
                   }
                   style={styles.eyeIcon}
                 />
@@ -174,7 +176,7 @@ const Kayıt = ({navigation}) => {
 
             <View style={styles.inputContainer}>
               <Image
-                source={require('../styles/password_icon.png')}
+                source={password_icon}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -191,8 +193,8 @@ const Kayıt = ({navigation}) => {
                 <Image
                   source={
                     showConfirmPassword
-                      ? require('../styles/eye_off.png')
-                      : require('../styles/eye.png')
+                      ? eye_off
+                      : eye
                   }
                   style={styles.eyeIcon}
                 />

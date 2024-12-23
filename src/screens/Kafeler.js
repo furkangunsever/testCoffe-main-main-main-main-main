@@ -11,6 +11,8 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { arabica_logo, harputdibek_logo } from '../assets/images';
+import { close_icon, location_icon, search_icon } from '../assets/icons';
 
 const {width} = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -57,9 +59,9 @@ const Kafeler = ({navigation}) => {
       <View style={styles.cardImageContainer}>
         <Image
           source={
-            cafe.logoPath === '../styles/arabica_logo.png'
-              ? require('../styles/arabica_logo.png')
-              : require('../styles/harputdibek_logo.png')
+            cafe.logoPath === '../../assets/images/arabica_logo.png'
+              ? arabica_logo
+              : harputdibek_logo
           }
           style={styles.cardImage}
           resizeMode="contain"
@@ -70,7 +72,7 @@ const Kafeler = ({navigation}) => {
         <Text style={styles.cafeDescription}>{cafe.description}</Text>
         <View style={styles.locationContainer}>
           <Image
-            source={require('../styles/location_icon.png')}
+            source={location_icon}
             style={styles.locationIcon}
           />
           <Text style={styles.locationText}>{cafe.location}</Text>
@@ -91,7 +93,7 @@ const Kafeler = ({navigation}) => {
 
       <View style={styles.searchContainer}>
         <Image
-          source={require('../styles/search_icon.png')}
+          source={search_icon}
           style={styles.searchIcon}
         />
         <TextInput
@@ -106,7 +108,7 @@ const Kafeler = ({navigation}) => {
             style={styles.clearButton}
             onPress={() => setSearchQuery('')}>
             <Image
-              source={require('../styles/close_icon.png')}
+              source={close_icon}
               style={styles.clearIcon}
             />
           </TouchableOpacity>

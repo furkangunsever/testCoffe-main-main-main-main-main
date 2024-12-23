@@ -11,6 +11,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import { user_icon } from '../assets/images';
+import { arrow_right, edit_icon, help_icon, logout_icon, notification_icon, privacy_icon } from '../assets/icons';
 
 const Profil = ({navigation}) => {
   const currentUser = auth().currentUser;
@@ -65,7 +67,7 @@ const Profil = ({navigation}) => {
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require('../styles/user_icon.png')}
+              source={user_icon}
               style={styles.avatar}
             />
             {!isEditing && (
@@ -73,7 +75,7 @@ const Profil = ({navigation}) => {
                 style={styles.editButton}
                 onPress={() => setIsEditing(true)}>
                 <Image
-                  source={require('../styles/edit_icon.png')}
+                  source={edit_icon}
                   style={styles.editIcon}
                 />
               </TouchableOpacity>
@@ -126,12 +128,12 @@ const Profil = ({navigation}) => {
             style={styles.settingsItem}
             onPress={() => navigation.navigate('Notifications')}>
             <Image
-              source={require('../styles/notification_icon.png')}
+              source={notification_icon}
               style={styles.settingsIcon}
             />
             <Text style={styles.settingsText}>Bildirimler</Text>
             <Image
-              source={require('../styles/arrow_right.png')}
+              source={arrow_right}
               style={styles.arrowIcon}
             />
           </TouchableOpacity>
@@ -140,12 +142,12 @@ const Profil = ({navigation}) => {
             style={styles.settingsItem}
             onPress={() => navigation.navigate('Privacy')}>
             <Image
-              source={require('../styles/privacy_icon.png')}
+              source={privacy_icon}
               style={styles.settingsIcon}
             />
             <Text style={styles.settingsText}>Gizlilik</Text>
             <Image
-              source={require('../styles/arrow_right.png')}
+              source={arrow_right}
               style={styles.arrowIcon}
             />
           </TouchableOpacity>
@@ -154,12 +156,12 @@ const Profil = ({navigation}) => {
             style={styles.settingsItem}
             onPress={() => navigation.navigate('Help')}>
             <Image
-              source={require('../styles/help_icon.png')}
+              source={help_icon}
               style={styles.settingsIcon}
             />
             <Text style={styles.settingsText}>Yardım</Text>
             <Image
-              source={require('../styles/arrow_right.png')}
+              source={arrow_right}
               style={styles.arrowIcon}
             />
           </TouchableOpacity>
@@ -168,7 +170,7 @@ const Profil = ({navigation}) => {
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Image
-          source={require('../styles/logout_icon.png')}
+          source={logout_icon}
           style={styles.logoutIcon}
         />
         <Text style={styles.logoutText}>Çıkış Yap</Text>

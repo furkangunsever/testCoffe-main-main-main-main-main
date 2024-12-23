@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
+import { chart_icon, coffee_icon, customer_icon, gift_icon, reward_icon } from '../../assets/icons';
 
 const {width} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.45;
@@ -111,7 +112,7 @@ const AdminHome = () => {
       <View style={styles.header}>
         <View style={styles.headerTitleContainer}>
           <Image
-            source={require('../../styles/coffee_icon.png')}
+            source={coffee_icon}
             style={styles.headerIcon}
           />
           <Text style={styles.headerTitle}>{cafeName}</Text>
@@ -125,13 +126,13 @@ const AdminHome = () => {
             <StatCard
               title="Satılan Kahve"
               value={stats?.today.coffeeCount || 0}
-              icon={require('../../styles/coffee_icon.png')}
+              icon={coffee_icon}
               color="#E67E22"
             />
             <StatCard
               title="Hediye Edilen"
               value={stats?.today.giftCount || 0}
-              icon={require('../../styles/gift_icon.png')}
+              icon={gift_icon}
               color="#27AE60"
             />
           </View>
@@ -143,14 +144,14 @@ const AdminHome = () => {
             <StatCard
               title="Toplam Satış"
               value={stats?.monthly.coffeeCount || 0}
-              icon={require('../../styles/chart_icon.png')}
+              icon={chart_icon}
               subtitle="Kahve"
               color="#3498DB"
             />
             <StatCard
               title="Toplam Hediye"
               value={stats?.monthly.giftCount || 0}
-              icon={require('../../styles/reward_icon.png')}
+              icon={reward_icon}
               subtitle="Kahve"
               color="#9B59B6"
             />
@@ -162,7 +163,7 @@ const AdminHome = () => {
           <StatCard
             title="Toplam Müşteri"
             value={stats?.totalCustomers || 0}
-            icon={require('../../styles/customer_icon.png')}
+            icon={customer_icon}
             subtitle="Tekil müşteri sayısı"
             color="#34495E"
           />

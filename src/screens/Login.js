@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import {signIn} from '../config/firebase';
 import auth from '@react-native-firebase/auth';
+import { splash_coffe } from '../assets/images';
+import { eye, eye_off } from '../assets/icons';
 
 const Login = ({navigation}) => {
   const [email, setEmail] = useState('');
@@ -90,7 +92,7 @@ const Login = ({navigation}) => {
         keyboardShouldPersistTaps="handled">
         <View style={styles.topSection}>
           <Image
-            source={require('../styles/splash_coffe.png')}
+            source={splash_coffe}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -128,8 +130,8 @@ const Login = ({navigation}) => {
               <Image
                 source={
                   showPassword
-                    ? require('../styles/eye_off.png')
-                    : require('../styles/eye.png')
+                    ? eye_off
+                    : eye
                 }
                 style={styles.eyeIcon}
               />

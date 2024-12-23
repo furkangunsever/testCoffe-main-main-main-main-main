@@ -12,6 +12,8 @@ import {
 import QRCode from 'react-native-qrcode-svg';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
+import { back_icon } from '../assets/icons';
+import { arabica_logo, coffe, harputdibek_logo } from '../assets/images';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -67,7 +69,7 @@ const Mudavim = ({route, navigation}) => {
           style={styles.backButton}
           onPress={() => navigation.navigate('Kafeler')}>
           <Image
-            source={require('../styles/back_icon.png')}
+            source={back_icon}
             style={styles.backIcon}
           />
         </TouchableOpacity>
@@ -84,9 +86,9 @@ const Mudavim = ({route, navigation}) => {
           {logoPath && (
             <Image
               source={
-                logoPath === '../styles/arabica_logo.png'
-                  ? require('../styles/arabica_logo.png')
-                  : require('../styles/harputdibek_logo.png')
+                logoPath === '../../assets/images/arabica_logo.png'
+                  ? arabica_logo
+                  : harputdibek_logo
               }
               style={styles.logo}
             />
@@ -109,7 +111,7 @@ const Mudavim = ({route, navigation}) => {
         <View style={styles.progressSection}>
           <View style={styles.imageContainer}>
             <Image
-              source={require('../styles/coffe.png')}
+              source={coffe}
               style={styles.mudavimImage}
             />
           </View>

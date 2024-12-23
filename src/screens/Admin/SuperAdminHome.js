@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
+import { admin_icon, coffee_icon, customer_icon, gift_icon, revenue_icon, reward_icon, sales_icon } from '../../assets/icons';
 
 const {width} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.45;
@@ -120,7 +121,7 @@ const SuperAdminHome = () => {
       <View style={styles.header}>
         <View style={styles.headerTitleContainer}>
           <Image
-            source={require('../../styles/admin_icon.png')}
+            source={admin_icon}
             style={styles.headerIcon}
           />
           <Text style={styles.headerSubtitle}>{cafeName}</Text>
@@ -135,13 +136,13 @@ const SuperAdminHome = () => {
               title="Toplam Gelir"
               value={formatCurrency(stats?.totalRevenue)}
               subtitle="Bu yıl"
-              icon={require('../../styles/revenue_icon.png')}
+              icon={revenue_icon}
             />
             <StatCard
               title="Müşteriler"
               value={stats?.totalCustomers}
               subtitle="Toplam"
-              icon={require('../../styles/customer_icon.png')}
+              icon={customer_icon}
             />
           </View>
         </View>
@@ -152,12 +153,12 @@ const SuperAdminHome = () => {
             <StatCard
               title="Satılan Kahve"
               value={stats?.today.coffeeCount || 0}
-              icon={require('../../styles/coffee_icon.png')}
+              icon={coffee_icon}
             />
             <StatCard
               title="Hediye Kahve"
               value={stats?.today.giftCount || 0}
-              icon={require('../../styles/gift_icon.png')}
+              icon={gift_icon}
             />
           </View>
         </View>
@@ -168,12 +169,12 @@ const SuperAdminHome = () => {
             <StatCard
               title="Toplam Satış"
               value={stats?.monthly.coffeeCount || 0}
-              icon={require('../../styles/sales_icon.png')}
+              icon={sales_icon}
             />
             <StatCard
               title="Toplam Hediye"
               value={stats?.monthly.giftCount || 0}
-              icon={require('../../styles/reward_icon.png')}
+              icon={reward_icon}
             />
           </View>
         </View>

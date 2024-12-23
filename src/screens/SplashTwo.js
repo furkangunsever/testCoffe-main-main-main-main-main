@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import { splash_two1, splash_two2, splash_two3, splash_two4, splash_two5, splash_two6, splash_two7, splash_two8, splash_two9 } from '../assets/images';
 
 const {width} = Dimensions.get('window');
 
@@ -47,17 +48,17 @@ const SplashTwo = ({navigation}) => {
             <Text style={styles.skipTopText}>Atla</Text>
           </TouchableOpacity>
           <Image
-            source={require('../styles/splash_two1.png')}
+            source={splash_two1}
             style={styles.image}
             resizeMode="contain"
           />
           <Image
-            source={require('../styles/splash_two2.png')}
+            source={splash_two2}
             style={styles.image}
             resizeMode="contain"
           />
           <Image
-            source={require('../styles/splash_two3.png')}
+            source={splash_two3}
             style={styles.image}
             resizeMode="contain"
           />
@@ -71,17 +72,17 @@ const SplashTwo = ({navigation}) => {
             <Text style={styles.skipTopText}>Atla</Text>
           </TouchableOpacity>
           <Image
-            source={require('../styles/splash_two4.png')}
+            source={splash_two4}
             style={styles.image}
             resizeMode="contain"
           />
           <Image
-            source={require('../styles/splash_two5.png')}
+            source={splash_two5}
             style={styles.image}
             resizeMode="contain"
           />
           <Image
-            source={require('../styles/splash_two6.png')}
+            source={splash_two6}
             style={styles.image}
             resizeMode="contain"
           />
@@ -95,17 +96,17 @@ const SplashTwo = ({navigation}) => {
             <Text style={styles.skipTopText}>Atla</Text>
           </TouchableOpacity>
           <Image
-            source={require('../styles/splash_two7.png')}
+            source={splash_two7}
             style={styles.image}
             resizeMode="contain"
           />
           <Image
-            source={require('../styles/splash_two8.png')}
+            source={splash_two8}
             style={styles.image}
             resizeMode="contain"
           />
           <Image
-            source={require('../styles/splash_two9.png')}
+            source={splash_two9}
             style={styles.image}
             resizeMode="contain"
           />
