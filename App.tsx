@@ -1,94 +1,10 @@
 import React, {useEffect, useState} from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {Image, ActivityIndicator, View} from 'react-native';
+import {ActivityIndicator, View} from 'react-native';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
-import Splash from './src/screens/Splash';
-import SplashTwo from './src/screens/SplashTwo';
-import Login from './src/screens/Login';
-import Kafeler from './src/screens/Kafeler';
-import Kayıt from './src/screens/Kayıt';
-import Mudavim from './src/screens/Mudavim';
-import Kuponlarım from './src/screens/Kuponlarım';
-import Profil from './src/screens/Profil';
-import Admin from './src/screens/Admin/Admin';
-import SuperAdmin from './src/screens/Admin/SuperAdmin';
-import SuperAdminHome from './src/screens/Admin/SuperAdminHome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Notifications from './src/screens/Settings/Notifications';
-import Privacy from './src/screens/Settings/Privacy';
-import Help from './src/screens/Settings/Help';
-import { anasayfa_icon, kuponlarım_icon, profil_icon } from './src/assets/icons';
-
-const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
-
-const TabNavigator = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        tabBarStyle: {
-          backgroundColor: '#FFF',
-          borderTopWidth: 1,
-          borderTopColor: '#F0F0F0',
-        },
-        tabBarActiveTintColor: '#4A3428',
-        tabBarInactiveTintColor: '#999',
-        headerShown: false,
-      }}>
-      <Tab.Screen
-        name="Anasayfa"
-        component={Mudavim}
-        options={{
-          tabBarIcon: ({focused}) => (
-            <Image
-              source={anasayfa_icon}
-              style={{
-                width: 24,
-                height: 24,
-                tintColor: focused ? '#4A3428' : '#999',
-              }}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Kuponlarım"
-        component={Kuponlarım}
-        options={{
-          tabBarIcon: ({focused}) => (
-            <Image
-              source={kuponlarım_icon}
-              style={{
-                width: 24,
-                height: 24,
-                tintColor: focused ? '#4A3428' : '#999',
-              }}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Profil"
-        component={Profil}
-        options={{
-          tabBarIcon: ({focused}) => (
-            <Image
-              source={profil_icon}
-              style={{
-                width: 24,
-                height: 24,
-                tintColor: focused ? '#4A3428' : '#999',
-              }}
-            />
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-};
+import Routes from './src/routes';
+import {FavoriteProvider} from './src/context/FavoriteContext';
 
 const App = () => {
   const [initializing, setInitializing] = useState(true);
@@ -97,6 +13,29 @@ const App = () => {
   const [isFirstLaunch, setIsFirstLaunch] = useState(true);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
   const [isFirstTime, setIsFirstTime] = useState(true);
+
+  // Uygulama ilk kez açılıyor mu kontrolü
+  useEffect(() => {
+    const checkFirstLaunch = async () => {
+      try {
+        const hasLaunched = await AsyncStorage.getItem('hasLaunched');
+        if (hasLaunched === null) {
+          // İlk kez açılıyor
+          await AsyncStorage.setItem('hasLaunched', 'true');
+          setIsFirstTime(true);
+        } else {
+          // Daha önce açılmış
+          setIsFirstTime(false);
+        }
+        setIsFirstLaunch(false);
+      } catch (error) {
+        console.error('AsyncStorage error:', error);
+        setIsFirstTime(false);
+        setIsFirstLaunch(false);
+      }
+    };
+    checkFirstLaunch();
+  }, []);
 
   // Handle user state changes
   async function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
@@ -130,33 +69,6 @@ const App = () => {
     return subscriber;
   }, []);
 
-  useEffect(() => {
-    const checkFirstTime = async () => {
-      try {
-        const value = await AsyncStorage.getItem('isFirstTime');
-        if (value === null) {
-          await AsyncStorage.setItem('isFirstTime', 'false');
-          setIsFirstTime(true);
-        } else {
-          setIsFirstTime(false);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    checkFirstTime();
-  }, []);
-
-  // Splash ekranı için timer effect'i
-  useEffect(() => {
-    if (isFirstLaunch) {
-      const timer = setTimeout(() => {
-        setIsFirstLaunch(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isFirstLaunch]);
-
   if (initializing || isRoleLoading) {
     return (
       <View
@@ -172,50 +84,15 @@ const App = () => {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown: false}}>
-        {isFirstLaunch ? (
-          <Stack.Screen name="Splash" component={Splash} />
-        ) : isFirstTime ? (
-          <Stack.Screen
-            name="SplashTwo"
-            component={SplashTwo}
-            listeners={{
-              focus: () => {
-                setTimeout(() => {
-                  setIsFirstTime(false);
-                }, 2000);
-              },
-            }}
-          />
-        ) : !user ? (
-          // Auth screens
-          <>
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Kayıt" component={Kayıt} />
-          </>
-        ) : userRole === 'superadmin' ? (
-          <Stack.Screen name="SuperAdmin" component={SuperAdmin} />
-        ) : userRole === 'admin' ? (
-          <Stack.Screen name="AdminScreen" component={Admin} />
-        ) : (
-          // Normal user screens
-          <>
-            <Stack.Screen
-              name="Kafeler"
-              component={Kafeler}
-              options={{
-                gestureEnabled: false,
-              }}
-            />
-            <Stack.Screen name="MainTabs" component={TabNavigator} />
-            <Stack.Screen name="Notifications" component={Notifications} />
-            <Stack.Screen name="Privacy" component={Privacy} />
-            <Stack.Screen name="Help" component={Help} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <FavoriteProvider>
+      <Routes
+        isFirstLaunch={isFirstLaunch}
+        isFirstTime={isFirstTime}
+        user={user}
+        userRole={userRole}
+        setIsFirstTime={setIsFirstTime}
+      />
+    </FavoriteProvider>
   );
 };
 

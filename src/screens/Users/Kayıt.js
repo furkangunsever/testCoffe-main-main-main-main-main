@@ -12,9 +12,9 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import {signUp} from '../config/firebase';
-import { splash_coffe, user_icon } from '../assets/images';
-import { email_icon, eye, eye_off, password_icon } from '../assets/icons';
+import {signUp} from '../../config/firebase';
+import {splash_coffe, user_icon} from '../../assets/images';
+import {email_icon, eye, eye_off, password_icon} from '../../assets/icons';
 
 const {width} = Dimensions.get('window');
 
@@ -104,10 +104,7 @@ const Kayıt = ({navigation}) => {
 
           <View style={styles.inputGroup}>
             <View style={styles.inputContainer}>
-              <Image
-                source={user_icon}
-                style={styles.inputIcon}
-              />
+              <Image source={user_icon} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Ad"
@@ -118,10 +115,7 @@ const Kayıt = ({navigation}) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Image
-                source={user_icon}
-                style={styles.inputIcon}
-              />
+              <Image source={user_icon} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Soyad"
@@ -132,10 +126,7 @@ const Kayıt = ({navigation}) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Image
-                source={email_icon}
-                style={styles.inputIcon}
-              />
+              <Image source={email_icon} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="E-mail"
@@ -148,10 +139,7 @@ const Kayıt = ({navigation}) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Image
-                source={password_icon}
-                style={styles.inputIcon}
-              />
+              <Image source={password_icon} style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, styles.passwordInput]}
                 placeholder="Şifre"
@@ -164,21 +152,14 @@ const Kayıt = ({navigation}) => {
                 style={styles.eyeButton}
                 onPress={() => setShowPassword(!showPassword)}>
                 <Image
-                  source={
-                    showPassword
-                      ? eye_off
-                      : eye
-                  }
+                  source={showPassword ? eye_off : eye}
                   style={styles.eyeIcon}
                 />
               </TouchableOpacity>
             </View>
 
             <View style={styles.inputContainer}>
-              <Image
-                source={password_icon}
-                style={styles.inputIcon}
-              />
+              <Image source={password_icon} style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, styles.passwordInput]}
                 placeholder="Şifre Tekrar"
@@ -191,11 +172,7 @@ const Kayıt = ({navigation}) => {
                 style={styles.eyeButton}
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                 <Image
-                  source={
-                    showConfirmPassword
-                      ? eye_off
-                      : eye
-                  }
+                  source={showConfirmPassword ? eye_off : eye}
                   style={styles.eyeIcon}
                 />
               </TouchableOpacity>

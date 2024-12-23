@@ -12,8 +12,8 @@ import {
 import QRCode from 'react-native-qrcode-svg';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
-import { back_icon } from '../assets/icons';
-import { arabica_logo, coffe, harputdibek_logo } from '../assets/images';
+import {back_icon} from '../../assets/icons';
+import {arabica_logo, coffe, harputdibek_logo} from '../../assets/images';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -68,10 +68,7 @@ const Mudavim = ({route, navigation}) => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.navigate('Kafeler')}>
-          <Image
-            source={back_icon}
-            style={styles.backIcon}
-          />
+          <Image source={back_icon} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Sadakat</Text>
       </View>
@@ -110,10 +107,7 @@ const Mudavim = ({route, navigation}) => {
 
         <View style={styles.progressSection}>
           <View style={styles.imageContainer}>
-            <Image
-              source={coffe}
-              style={styles.mudavimImage}
-            />
+            <Image source={coffe} style={styles.mudavimImage} />
           </View>
 
           <View style={styles.progressBarContainer}>

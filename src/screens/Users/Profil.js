@@ -11,8 +11,15 @@ import {
   SafeAreaView,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
-import { user_icon } from '../assets/images';
-import { arrow_right, edit_icon, help_icon, logout_icon, notification_icon, privacy_icon } from '../assets/icons';
+import {user_icon} from '../../assets/images';
+import {
+  arrow_right,
+  edit_icon,
+  help_icon,
+  logout_icon,
+  notification_icon,
+  privacy_icon,
+} from '../../assets/icons';
 
 const Profil = ({navigation}) => {
   const currentUser = auth().currentUser;
@@ -66,18 +73,12 @@ const Profil = ({navigation}) => {
       <ScrollView style={styles.scrollView}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <Image
-              source={user_icon}
-              style={styles.avatar}
-            />
+            <Image source={user_icon} style={styles.avatar} />
             {!isEditing && (
               <TouchableOpacity
                 style={styles.editButton}
                 onPress={() => setIsEditing(true)}>
-                <Image
-                  source={edit_icon}
-                  style={styles.editIcon}
-                />
+                <Image source={edit_icon} style={styles.editIcon} />
               </TouchableOpacity>
             )}
           </View>
@@ -127,52 +128,31 @@ const Profil = ({navigation}) => {
           <TouchableOpacity
             style={styles.settingsItem}
             onPress={() => navigation.navigate('Notifications')}>
-            <Image
-              source={notification_icon}
-              style={styles.settingsIcon}
-            />
+            <Image source={notification_icon} style={styles.settingsIcon} />
             <Text style={styles.settingsText}>Bildirimler</Text>
-            <Image
-              source={arrow_right}
-              style={styles.arrowIcon}
-            />
+            <Image source={arrow_right} style={styles.arrowIcon} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.settingsItem}
             onPress={() => navigation.navigate('Privacy')}>
-            <Image
-              source={privacy_icon}
-              style={styles.settingsIcon}
-            />
+            <Image source={privacy_icon} style={styles.settingsIcon} />
             <Text style={styles.settingsText}>Gizlilik</Text>
-            <Image
-              source={arrow_right}
-              style={styles.arrowIcon}
-            />
+            <Image source={arrow_right} style={styles.arrowIcon} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.settingsItem}
             onPress={() => navigation.navigate('Help')}>
-            <Image
-              source={help_icon}
-              style={styles.settingsIcon}
-            />
+            <Image source={help_icon} style={styles.settingsIcon} />
             <Text style={styles.settingsText}>Yardım</Text>
-            <Image
-              source={arrow_right}
-              style={styles.arrowIcon}
-            />
+            <Image source={arrow_right} style={styles.arrowIcon} />
           </TouchableOpacity>
         </View>
       </ScrollView>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Image
-          source={logout_icon}
-          style={styles.logoutIcon}
-        />
+        <Image source={logout_icon} style={styles.logoutIcon} />
         <Text style={styles.logoutText}>Çıkış Yap</Text>
       </TouchableOpacity>
     </SafeAreaView>

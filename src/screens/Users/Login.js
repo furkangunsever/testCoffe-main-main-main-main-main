@@ -12,10 +12,11 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import {signIn} from '../config/firebase';
+import {signIn} from '../../config/firebase';
 import auth from '@react-native-firebase/auth';
-import { splash_coffe } from '../assets/images';
-import { eye, eye_off } from '../assets/icons';
+import {splash_coffe} from '../../assets/images';
+import {eye, eye_off} from '../../assets/icons';
+import database from '@react-native-firebase/database';
 
 const Login = ({navigation}) => {
   const [email, setEmail] = useState('');
@@ -32,14 +33,26 @@ const Login = ({navigation}) => {
 
     try {
       setLoading(true);
-
       const result = await signIn(email, password);
-      console.log('Login result:', result);
 
       if (result.success && result.user) {
-        // Direkt olarak role'e göre yönlendirme yapılacak
-        // App.tsx'teki auth state değişikliği bunu handle edecek
-      } else if (!result.success) {
+        // Kullanıcı rolüne göre yönlendirme
+        const userSnapshot = await database()
+          .ref(`users/${result.user.uid}`)
+          .once('value');
+
+        const userData = userSnapshot.val();
+        const userRole = userData?.role || 'user';
+
+        if (userRole === 'superadmin') {
+          navigation.replace('SuperAdmin');
+        } else if (userRole === 'admin') {
+          navigation.replace('AdminScreen');
+        } else {
+          // Normal kullanıcı için Kafeler sayfasına yönlendirme
+          navigation.replace('Kafeler');
+        }
+      } else {
         let errorMessage = 'Giriş yapılamadı.';
         if (result.error && result.error.code) {
           switch (result.error.code) {
@@ -64,7 +77,7 @@ const Login = ({navigation}) => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert('Hata', error.message);
+      Alert.alert('Hata', 'Giriş yapılırken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -128,11 +141,7 @@ const Login = ({navigation}) => {
               style={styles.eyeButton}
               onPress={() => setShowPassword(!showPassword)}>
               <Image
-                source={
-                  showPassword
-                    ? eye_off
-                    : eye
-                }
+                source={showPassword ? eye_off : eye}
                 style={styles.eyeIcon}
               />
             </TouchableOpacity>

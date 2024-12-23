@@ -32,100 +32,18 @@ export const signUp = async (email, password, name, surname) => {
 
 export const signIn = async (email, password) => {
   try {
-    if (!email || !password) {
-      return {
-        success: false,
-        error: {
-          code: 'auth/invalid-credentials',
-          message: 'E-posta ve şifre gereklidir.',
-        },
-      };
-    }
-
-    // Önce authentication işlemini gerçekleştir
     const userCredential = await auth().signInWithEmailAndPassword(
       email,
       password,
     );
-
-    if (!userCredential || !userCredential.user) {
-      return {
-        success: false,
-        error: {
-          code: 'auth/unknown',
-          message: 'Giriş işlemi başarısız oldu.',
-        },
-      };
-    }
-
-    // Kullanıcı bilgilerini database'den al
-    const userSnapshot = await database()
-      .ref(`users/${userCredential.user.uid}`)
-      .once('value');
-
-    const userData = userSnapshot.val();
-
-    // Eğer kullanıcı database'de yoksa varsayılan değerlerle oluştur
-    if (!userData) {
-      const defaultUserData = {
-        email: userCredential.user.email,
-        role: 'user',
-        cafename: 'usercafe',
-        createdAt: database.ServerValue.TIMESTAMP,
-      };
-
-      await database()
-        .ref(`users/${userCredential.user.uid}`)
-        .set(defaultUserData);
-
-      return {
-        success: true,
-        user: userCredential.user,
-        role: 'user',
-      };
-    }
-
-    // Başarılı giriş durumunda kullanıcı bilgilerini ve rolünü döndür
     return {
       success: true,
       user: userCredential.user,
-      role: userData.role || 'user',
-      cafeName: userData.cafename,
     };
   } catch (error) {
-    console.error('SignIn Error:', error);
-
-    // Firebase hata kodlarını daha detaylı ele al
-    let errorMessage = 'Giriş yapılırken bir hata oluştu.';
-    let errorCode = error.code || 'auth/unknown';
-
-    switch (error.code) {
-      case 'auth/invalid-email':
-        errorMessage = 'Geçersiz e-posta adresi.';
-        break;
-      case 'auth/user-disabled':
-        errorMessage = 'Bu hesap devre dışı bırakılmış.';
-        break;
-      case 'auth/user-not-found':
-        errorMessage = 'Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı.';
-        break;
-      case 'auth/wrong-password':
-        errorMessage = 'Hatalı şifre.';
-        break;
-      case 'auth/invalid-credential':
-        errorMessage =
-          'Geçersiz kimlik bilgileri. Lütfen bilgilerinizi kontrol edin.';
-        break;
-      default:
-        errorMessage = error.message || 'Giriş yapılırken bir hata oluştu.';
-    }
-
     return {
       success: false,
-      error: {
-        code: errorCode,
-        message: errorMessage,
-      },
+      error: error,
     };
   }
 };

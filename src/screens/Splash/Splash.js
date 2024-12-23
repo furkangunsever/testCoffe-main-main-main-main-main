@@ -1,15 +1,13 @@
 import React, {useEffect} from 'react';
 import {View, Image, StyleSheet} from 'react-native';
-import { splash_coffe, splash_text } from '../assets/images';
+import {splash_coffe, splash_text} from '../../assets/images';
 
 const Splash = ({navigation}) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       navigation.replace('SplashTwo');
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [navigation]);
+    }, 2000);
+  }, []);
 
   return (
     <View style={styles.container}>

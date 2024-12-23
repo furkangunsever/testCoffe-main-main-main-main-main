@@ -11,8 +11,15 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
-import { arabica_logo, harputdibek_logo } from '../assets/images';
-import { close_icon, location_icon, search_icon } from '../assets/icons';
+import {arabica_logo, harputdibek_logo} from '../../assets/images';
+import {
+  close_icon,
+  location_icon,
+  search_icon,
+  star,
+  star_1,
+} from '../../assets/icons';
+import {useFavorites} from '../../context/FavoriteContext';
 
 const {width} = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -36,8 +43,18 @@ const cafes = [
 
 const Kafeler = ({navigation}) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const {favorites, toggleFavorite, isFavorite} = useFavorites();
 
-  const filteredCafes = cafes.filter(cafe =>
+  // Kafeleri favorilere göre sırala
+  const sortedCafes = [...cafes].sort((a, b) => {
+    const aFav = isFavorite(a.id);
+    const bFav = isFavorite(b.id);
+    if (aFav && !bFav) return -1;
+    if (!aFav && bFav) return 1;
+    return 0;
+  });
+
+  const filteredCafes = sortedCafes.filter(cafe =>
     cafe.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -52,33 +69,39 @@ const Kafeler = ({navigation}) => {
   };
 
   const renderCafeCard = cafe => (
-    <TouchableOpacity
-      key={cafe.id}
-      style={styles.card}
-      onPress={() => handleCafeSelection(cafe.name, cafe.logoPath)}>
-      <View style={styles.cardImageContainer}>
-        <Image
-          source={
-            cafe.logoPath === '../../assets/images/arabica_logo.png'
-              ? arabica_logo
-              : harputdibek_logo
-          }
-          style={styles.cardImage}
-          resizeMode="contain"
-        />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.cafeName}>{cafe.name}</Text>
-        <Text style={styles.cafeDescription}>{cafe.description}</Text>
-        <View style={styles.locationContainer}>
+    <View key={cafe.id} style={styles.card}>
+      <TouchableOpacity
+        style={styles.cardContent}
+        onPress={() => handleCafeSelection(cafe.name, cafe.logoPath)}>
+        <View style={styles.cardImageContainer}>
           <Image
-            source={location_icon}
-            style={styles.locationIcon}
+            source={
+              cafe.logoPath === '../../assets/images/arabica_logo.png'
+                ? arabica_logo
+                : harputdibek_logo
+            }
+            style={styles.cardImage}
+            resizeMode="contain"
           />
-          <Text style={styles.locationText}>{cafe.location}</Text>
         </View>
-      </View>
-    </TouchableOpacity>
+        <View style={styles.cardInfo}>
+          <Text style={styles.cafeName}>{cafe.name}</Text>
+          <Text style={styles.cafeDescription}>{cafe.description}</Text>
+          <View style={styles.locationContainer}>
+            <Image source={location_icon} style={styles.locationIcon} />
+            <Text style={styles.locationText}>{cafe.location}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.favoriteButton}
+        onPress={() => toggleFavorite(cafe)}>
+        <Image
+          source={isFavorite(cafe.id) ? star_1 : star}
+          style={styles.favoriteIcon}
+        />
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -92,10 +115,7 @@ const Kafeler = ({navigation}) => {
       </View>
 
       <View style={styles.searchContainer}>
-        <Image
-          source={search_icon}
-          style={styles.searchIcon}
-        />
+        <Image source={search_icon} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Kafe ara..."
@@ -107,10 +127,7 @@ const Kafeler = ({navigation}) => {
           <TouchableOpacity
             style={styles.clearButton}
             onPress={() => setSearchQuery('')}>
-            <Image
-              source={close_icon}
-              style={styles.clearIcon}
-            />
+            <Image source={close_icon} style={styles.clearIcon} />
           </TouchableOpacity>
         )}
       </View>
@@ -202,10 +219,12 @@ const styles = StyleSheet.create({
   },
   cardImageContainer: {
     width: '100%',
-    height: CARD_WIDTH * 0.8,
+    height: CARD_WIDTH * 0.9,
     backgroundColor: '#F5E6D3',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 0,
+    paddingTop: 10,
   },
   cardImage: {
     width: '80%',
@@ -238,6 +257,28 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 12,
     color: '#666',
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    padding: 8,
+    zIndex: 1,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  favoriteIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#FFD700',
   },
 });
 
