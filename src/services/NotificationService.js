@@ -1,107 +1,197 @@
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Platform, PermissionsAndroid} from 'react-native';
 import auth from '@react-native-firebase/auth';
-import database from '@react-native-firebase/database';
-
-// Background message handler'ı dışarıda tanımlayın
-messaging().setBackgroundMessageHandler(async remoteMessage => {
-  console.log('Message handled in the background!', remoteMessage);
-});
+import PushNotification from 'react-native-push-notification';
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
 
 class NotificationService {
-  async requestUserPermission() {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  constructor() {
+    this.messageListener = null;
+    this.createDefaultChannels();
+  }
 
-    if (enabled) {
-      console.log('Authorization status:', authStatus);
-      const token = await this.getFCMToken();
-      console.log('FCM Token:', token);
-      return token;
+  createDefaultChannels() {
+    PushNotification.createChannel(
+      {
+        channelId: 'default-channel',
+        channelName: 'Default Channel',
+        channelDescription: 'Default notification channel',
+        soundName: 'default',
+        importance: 4,
+        vibrate: true,
+      },
+      created => console.log(`Channel created: ${created}`),
+    );
+  }
+
+  showNotification(notification) {
+    PushNotification.localNotification({
+      channelId: 'default-channel',
+      title: notification.title,
+      message: notification.body,
+      playSound: true,
+      soundName: 'default',
+      importance: 'high',
+      priority: 'high',
+      vibrate: true,
+    });
+  }
+
+  async requestPermission() {
+    try {
+      if (Platform.OS === 'ios') {
+        const authStatus = await messaging().requestPermission();
+        return (
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL
+        );
+      } else if (Platform.OS === 'android') {
+        if (Platform.Version >= 33) {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+          );
+          return granted === PermissionsAndroid.RESULTS.GRANTED;
+        }
+        return true;
+      }
+    } catch (error) {
+      console.error('Bildirim izni alınırken hata:', error);
+      return false;
     }
   }
 
-  async getFCMToken() {
+  async registerDevice() {
     try {
-      let fcmToken = await AsyncStorage.getItem('fcmToken');
-
-      if (!fcmToken) {
-        fcmToken = await messaging().getToken();
-        if (fcmToken) {
-          console.log('New FCM Token:', fcmToken);
-          await AsyncStorage.setItem('fcmToken', fcmToken);
-          await this.updateTokenToServer(fcmToken);
-        }
-      } else {
-        console.log('Existing FCM Token:', fcmToken);
+      const hasPermission = await this.requestPermission();
+      if (!hasPermission) {
+        return false;
       }
 
-      // Token yenileme dinleyicisi
-      messaging().onTokenRefresh(async newToken => {
-        console.log('New token refresh:', newToken);
-        await AsyncStorage.setItem('fcmToken', newToken);
-        await this.updateTokenToServer(newToken);
+      const fcmToken = await messaging().getToken();
+      if (fcmToken) {
+        await AsyncStorage.setItem('fcmToken', fcmToken);
+        console.log('============ FCM TOKEN ============');
+        console.log(fcmToken);
+        console.log('==================================');
+      }
+
+      // Ön planda bildirim izni
+      await messaging().requestPermission();
+
+      // Ön planda bildirim dinleyicisi
+      this.messageListener = messaging().onMessage(async remoteMessage => {
+        console.log('Ön planda bildirim alındı:', remoteMessage);
+
+        // Bildirimi göster
+        if (remoteMessage.notification) {
+          this.showNotification(remoteMessage.notification);
+        }
       });
 
-      return fcmToken;
+      // Arka plan bildirimleri için
+      messaging().setBackgroundMessageHandler(async remoteMessage => {
+        console.log('Arka planda mesaj alındı:', remoteMessage);
+        if (remoteMessage.notification) {
+          this.showNotification(remoteMessage.notification);
+        }
+      });
+
+      // Uygulama kapalıyken bildirime tıklanma
+      messaging()
+        .getInitialNotification()
+        .then(remoteMessage => {
+          if (remoteMessage) {
+            console.log(
+              'Uygulama kapalıyken bildirime tıklandı:',
+              remoteMessage,
+            );
+          }
+        });
+
+      // Arka planda bildirime tıklanma
+      messaging().onNotificationOpenedApp(remoteMessage => {
+        console.log('Arka planda bildirime tıklandı:', remoteMessage);
+      });
+
+      return true;
     } catch (error) {
-      console.error('FCM Token Error:', error);
+      console.error('Cihaz kaydedilirken hata:', error);
+      return false;
+    }
+  }
+
+  async unregisterDevice() {
+    try {
+      if (this.messageListener) {
+        this.messageListener();
+        this.messageListener = null;
+      }
+
+      await messaging().deleteToken();
+      await AsyncStorage.removeItem('fcmToken');
+      return true;
+    } catch (error) {
+      console.error('Cihaz kaydı silinirken hata:', error);
+      return false;
+    }
+  }
+
+  async checkNotificationSettings() {
+    try {
+      const userId = auth().currentUser?.uid;
+      if (!userId) return null;
+
+      const settings = await AsyncStorage.getItem(
+        `notificationSettings_${userId}`,
+      );
+      return settings ? JSON.parse(settings) : null;
+    } catch (error) {
+      console.error('Bildirim ayarları kontrol edilirken hata:', error);
       return null;
     }
   }
 
-  async updateTokenToServer(token) {
-    const userId = auth().currentUser?.uid;
-    if (userId) {
-      try {
-        await database().ref(`users/${userId}/fcmToken`).set(token);
-        console.log('Token updated to server for user:', userId);
-      } catch (error) {
-        console.error('Error updating token to server:', error);
-      }
-    }
-  }
-
-  async onNotificationOpenedApp() {
-    messaging().onNotificationOpenedApp(remoteMessage => {
-      console.log('Background state:', remoteMessage.data);
-      // Bildirime tıklandığında yapılacak işlemler
-    });
-
-    // Uygulama kapalıyken bildirime tıklanırsa
-    messaging()
-      .getInitialNotification()
-      .then(remoteMessage => {
-        if (remoteMessage) {
-          console.log('Quit state:', remoteMessage.data);
-        }
-      });
-  }
-
-  async setupForegroundHandler() {
-    messaging().onMessage(async remoteMessage => {
-      console.log('Foreground Message:', remoteMessage);
-      // Burada özel bildirim gösterimi yapabilirsiniz
-    });
-  }
-
-  // Background handler'ı initialize eden metod
-  async setupBackgroundHandler() {
-    // Background message handler
-    messaging().setBackgroundMessageHandler(async remoteMessage => {
-      console.log('Message handled in the background!', remoteMessage);
-      // Burada background işlemleri yapabilirsiniz
-    });
-  }
-
-  // Tüm notification ayarlarını başlatan metod
+  // Tüm bildirim ayarlarını başlatan metod
   async initialize() {
-    await this.requestUserPermission();
-    await this.setupForegroundHandler();
-    await this.setupBackgroundHandler();
-    await this.onNotificationOpenedApp();
+    try {
+      // İzinleri kontrol et
+      const hasPermission = await this.requestPermission();
+      if (!hasPermission) {
+        console.log('Bildirim izni reddedildi');
+        return false;
+      }
+
+      // Cihazı kaydet
+      await this.registerDevice();
+
+      // Arka plan mesaj işleyicisi
+      messaging().setBackgroundMessageHandler(async remoteMessage => {
+        console.log('Arka planda mesaj alındı:', remoteMessage);
+      });
+
+      // Uygulama kapalıyken bildirime tıklanma durumu
+      messaging()
+        .getInitialNotification()
+        .then(remoteMessage => {
+          if (remoteMessage) {
+            console.log(
+              'Uygulama kapalıyken bildirime tıklandı:',
+              remoteMessage,
+            );
+          }
+        });
+
+      // Arka planda bildirime tıklanma durumu
+      messaging().onNotificationOpenedApp(remoteMessage => {
+        console.log('Arka planda bildirime tıklandı:', remoteMessage);
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Bildirim servisi başlatılırken hata:', error);
+      return false;
+    }
   }
 }
 

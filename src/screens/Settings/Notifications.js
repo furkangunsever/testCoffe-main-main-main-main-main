@@ -7,8 +7,10 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
-import { back_icon } from '../../assets/icons';
+import {back_icon} from '../../assets/icons';
+import NotificationService from '../../services/NotificationService';
 
 const Notifications = ({navigation}) => {
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -16,7 +18,28 @@ const Notifications = ({navigation}) => {
   const [promotionalNotifications, setPromotionalNotifications] =
     useState(false);
 
-  const handlePushToggle = value => setPushNotifications(value);
+  const handlePushToggle = async value => {
+    try {
+      if (value) {
+        const granted = await NotificationService.requestPermission();
+        if (!granted) {
+          Alert.alert(
+            'Bildirim İzni',
+            'Bildirimleri alabilmek için uygulama ayarlarından izin vermeniz gerekmektedir.',
+          );
+          return;
+        }
+        await NotificationService.registerDevice();
+      } else {
+        await NotificationService.unregisterDevice();
+      }
+      setPushNotifications(value);
+      await saveNotificationSettings('push', value);
+    } catch (error) {
+      console.error('Push bildirimi ayarlanırken hata:', error);
+      Alert.alert('Hata', 'Bildirim ayarları güncellenirken bir hata oluştu.');
+    }
+  };
   const handleEmailToggle = value => setEmailNotifications(value);
   const handlePromotionalToggle = value => setPromotionalNotifications(value);
 
@@ -26,10 +49,7 @@ const Notifications = ({navigation}) => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Image
-            source={back_icon}
-            style={styles.backIcon}
-          />
+          <Image source={back_icon} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Bildirimler</Text>
       </View>
