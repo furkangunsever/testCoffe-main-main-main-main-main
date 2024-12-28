@@ -69,8 +69,16 @@ const Kayıt = ({navigation}) => {
       const result = await signUp(email, password, name, surname);
 
       if (result.success) {
-        Alert.alert('Başarılı', 'Kayıt işlemi başarıyla tamamlandı.');
-        navigation.navigate('Kafeler');
+        Alert.alert(
+          'Başarılı',
+          'Kayıt işlemi başarılı! Lütfen email adresinize gönderilen doğrulama linkine tıklayın.',
+          [
+            {
+              text: 'Tamam',
+              onPress: () => navigation.navigate('Login'),
+            },
+          ],
+        );
       } else {
         Alert.alert('Hata', result.error);
       }

@@ -120,30 +120,59 @@ export const signInWithGoogle = async () => {
 
 export const signUp = async (email, password, name, surname) => {
   try {
+    // Kullanıcı oluştur
     const userCredential = await auth().createUserWithEmailAndPassword(
       email,
       password,
     );
 
-    await userCredential.user.updateProfile({
-      displayName: `${name} ${surname}`,
-    });
+    // Email doğrulama maili gönder
+    await userCredential.user.sendEmailVerification();
 
+    // Kullanıcı bilgilerini database'e kaydet
     await database().ref(`users/${userCredential.user.uid}`).set({
       email: email,
       name: name,
       surname: surname,
       role: 'user',
       cafename: 'usercafe',
+      emailVerified: false,
       createdAt: database.ServerValue.TIMESTAMP,
     });
 
+    // Kullanıcının oturumunu kapat (email doğrulaması yapılana kadar)
+    await auth().signOut();
+
     return {
       success: true,
-      user: userCredential.user,
+      message:
+        'Kayıt işlemi başarılı! Lütfen email adresinize gönderilen doğrulama linkine tıklayın.',
     };
   } catch (error) {
-    return {success: false, error: error.message};
+    console.error('Signup Error:', error);
+    let errorMessage = 'Kayıt işlemi sırasında bir hata oluştu.';
+
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        errorMessage = 'Bu email adresi zaten kullanımda.';
+        break;
+      case 'auth/invalid-email':
+        errorMessage = 'Geçersiz email adresi.';
+        break;
+      case 'auth/operation-not-allowed':
+        errorMessage = 'Email/şifre girişi aktif değil.';
+        break;
+      case 'auth/weak-password':
+        errorMessage = 'Şifre çok zayıf.';
+        break;
+      default:
+        errorMessage = error.message;
+    }
+
+    return {
+      success: false,
+      error: errorMessage,
+    };
   }
 };
 
@@ -154,18 +183,33 @@ export const signIn = async (email, password) => {
       password,
     );
 
-    // Kullanıcı bilgilerinin tam olarak yüklenmesini bekle
-    await userCredential.user.reload();
+    // Email doğrulaması kontrolü
+    if (!userCredential.user.emailVerified) {
+      await auth().signOut();
+      return {
+        success: false,
+        error: {
+          code: 'auth/email-not-verified',
+          message: 'Lütfen email adresinizi doğrulayın.',
+        },
+      };
+    }
+
+    // Email doğrulanmışsa kullanıcı bilgilerini güncelle
+    await database().ref(`users/${userCredential.user.uid}`).update({
+      emailVerified: true,
+      lastLoginAt: database.ServerValue.TIMESTAMP,
+    });
 
     return {
       success: true,
       user: userCredential.user,
     };
   } catch (error) {
-    console.error('SignIn error:', error);
+    console.error('Login Error:', error);
     return {
       success: false,
-      error: error,
+      error,
     };
   }
 };
