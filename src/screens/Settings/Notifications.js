@@ -48,6 +48,18 @@ const Notifications = ({navigation}) => {
       const userId = auth().currentUser?.uid;
       if (!userId) return;
 
+      // Önce ayarları kaydet
+      const settings = {
+        push: value,
+        email: emailNotifications,
+        promotional: promotionalNotifications,
+      };
+      await AsyncStorage.setItem(
+        `notificationSettings_${userId}`,
+        JSON.stringify(settings),
+      );
+
+      // Sonra bildirimleri ayarla
       if (value) {
         const granted = await NotificationService.requestPermission();
         if (!granted) {
@@ -63,16 +75,6 @@ const Notifications = ({navigation}) => {
       }
 
       setPushNotifications(value);
-
-      const settings = {
-        push: value,
-        email: emailNotifications,
-        promotional: promotionalNotifications,
-      };
-      await AsyncStorage.setItem(
-        `notificationSettings_${userId}`,
-        JSON.stringify(settings),
-      );
     } catch (error) {
       console.error('Push bildirimi ayarlanırken hata:', error);
       Alert.alert('Hata', 'Bildirim ayarları güncellenirken bir hata oluştu.');

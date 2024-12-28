@@ -84,17 +84,6 @@ class NotificationService {
       const userId = auth().currentUser?.uid;
       if (!userId) return false;
 
-      const settings = await AsyncStorage.getItem(
-        `notificationSettings_${userId}`,
-      );
-      if (settings) {
-        const parsedSettings = JSON.parse(settings);
-        if (!parsedSettings.push) {
-          console.log('Push bildirimleri devre dışı - cihaz kaydedilmedi');
-          return false;
-        }
-      }
-
       const hasPermission = await this.requestPermission();
       if (!hasPermission) {
         return false;
@@ -108,11 +97,29 @@ class NotificationService {
         console.log('==================================');
       }
 
+      const settings = await AsyncStorage.getItem(
+        `notificationSettings_${userId}`,
+      );
+      if (settings) {
+        const parsedSettings = JSON.parse(settings);
+        if (!parsedSettings.push) {
+          if (this.messageListener) {
+            this.messageListener();
+            this.messageListener = null;
+          }
+          console.log('Push bildirimleri devre dışı - cihaz kaydedilmedi');
+          return false;
+        }
+      }
+
       await messaging().requestPermission();
+
+      if (this.messageListener) {
+        this.messageListener();
+      }
 
       this.messageListener = messaging().onMessage(async remoteMessage => {
         console.log('Ön planda bildirim alındı:', remoteMessage);
-
         if (remoteMessage.notification) {
           this.showNotification(remoteMessage.notification);
         }
@@ -140,6 +147,7 @@ class NotificationService {
         console.log('Arka planda bildirime tıklandı:', remoteMessage);
       });
 
+      console.log('Cihaz başarıyla kaydedildi ve bildirimler aktif');
       return true;
     } catch (error) {
       console.error('Cihaz kaydedilirken hata:', error);
