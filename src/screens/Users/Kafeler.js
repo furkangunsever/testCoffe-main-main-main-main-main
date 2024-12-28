@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {arabica_logo, harputdibek_logo} from '../../assets/images';
 import {
   close_icon,
@@ -58,14 +59,22 @@ const Kafeler = ({navigation}) => {
     cafe.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const handleCafeSelection = (cafeName, logoPath) => {
-    navigation.navigate('MainTabs', {
-      screen: 'Anasayfa',
-      params: {
-        cafeName: cafeName,
-        logoPath: logoPath,
-      },
-    });
+  const handleCafeSelection = async (cafeName, logoPath) => {
+    try {
+      // Seçilen kafe bilgisini AsyncStorage'a kaydet
+      await AsyncStorage.setItem('selectedCafe', cafeName);
+
+      // Mudavim sayfasına yönlendir ve kafe bilgisini aktar
+      navigation.navigate('MainTabs', {
+        screen: 'Mudavim',
+        params: {
+          cafeName: cafeName,
+        },
+        initial: false,
+      });
+    } catch (error) {
+      console.error('Kafe seçimi hatası:', error);
+    }
   };
 
   const renderCafeCard = cafe => (
@@ -76,9 +85,7 @@ const Kafeler = ({navigation}) => {
         <View style={styles.cardImageContainer}>
           <Image
             source={
-              cafe.logoPath === '../../assets/images/arabica_logo.png'
-                ? arabica_logo
-                : harputdibek_logo
+              cafe.name === 'Arabica Coffee' ? arabica_logo : harputdibek_logo
             }
             style={styles.cardImage}
             resizeMode="contain"
@@ -108,7 +115,9 @@ const Kafeler = ({navigation}) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Kafeler</Text>
+        <View style={{alignItems: 'center'}}>
+          <Text style={styles.headerTitle}>Kafeler</Text>
+        </View>
         <Text style={styles.headerSubtitle}>
           Favori kafenizi seçin ve kahve kazanmaya başlayın
         </Text>
@@ -220,11 +229,12 @@ const styles = StyleSheet.create({
   cardImageContainer: {
     width: '100%',
     height: CARD_WIDTH * 0.9,
-    backgroundColor: '#F5E6D3',
+    backgroundColor: '#F6F6F6FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 0,
     paddingTop: 10,
+    borderRadius: 10,
   },
   cardImage: {
     width: '80%',

@@ -9,19 +9,20 @@ import {
   View,
   Text,
 } from 'react-native';
-import {useFocusEffect} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import AdminEkle from './AdminEkle';
 import Adminler from './Adminler';
 import QRScanner from './QRScanner';
 import SuperAdminHome from './SuperAdminHome';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
-import { cıkıs_icon, home_icon, profile_icon, qr_icon } from '../../assets/icons';
+import {cıkıs_icon, home_icon, profile_icon, qr_icon} from '../../assets/icons';
 
 const Tab = createBottomTabNavigator();
 
 const SuperAdmin = () => {
   const [cafeName, setCafeName] = useState(null);
+  const navigation = useNavigation();
 
   // Süper adminin cafe name'ini al
   useEffect(() => {
@@ -59,17 +60,37 @@ const SuperAdmin = () => {
     }, []),
   );
 
-  const handleLogout = async () => {
-    try {
-      await auth().signOut();
-      // Çıkış işlemi Firebase tarafından handle edilecek
-    } catch (error) {
-      console.error('Çıkış yapılırken hata:', error);
-      Alert.alert(
-        'Hata',
-        'Çıkış yapılırken bir hata oluştu. Lütfen tekrar deneyin.',
-      );
-    }
+  const handleLogout = () => {
+    Alert.alert('Çıkış Yap', 'Çıkış yapmak istediğinizden emin misiniz?', [
+      {
+        text: 'İptal',
+        style: 'cancel',
+      },
+      {
+        text: 'Çıkış Yap',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const currentUser = auth().currentUser;
+
+            if (currentUser) {
+              await auth().signOut();
+            }
+
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
+          } catch (error) {
+            console.error('Çıkış hatası:', error);
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -77,10 +98,7 @@ const SuperAdmin = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Super Admin Panel</Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Image
-            source={cıkıs_icon}
-            style={styles.logoutIcon}
-          />
+          <Image source={cıkıs_icon} style={styles.logoutIcon} />
         </TouchableOpacity>
       </View>
 

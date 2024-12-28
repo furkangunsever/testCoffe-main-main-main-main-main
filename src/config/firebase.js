@@ -1,5 +1,122 @@
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+
+// Google Sign-In konfigürasyonu
+GoogleSignin.configure({
+  webClientId:
+    '446979866882-ahd64gao1pssos539dcpe7oktanm2vi7.apps.googleusercontent.com',
+  offlineAccess: false,
+  scopes: ['email', 'profile'],
+});
+
+// Google ile kayıt/giriş fonksiyonu
+export const signInWithGoogle = async () => {
+  try {
+    // Play Services kontrolü
+    try {
+      await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+    } catch (playError) {
+      console.error('Play Services Error:', {
+        code: playError.code,
+        message: playError.message,
+        stack: playError.stack,
+      });
+      return {
+        success: false,
+        error: {
+          type: 'PlayServices',
+          details: playError,
+        },
+      };
+    }
+
+    // Mevcut oturumu kontrol et ve temizle
+    try {
+      await GoogleSignin.signOut();
+    } catch (signOutError) {
+      console.error('SignOut Error:', {
+        code: signOutError.code,
+        message: signOutError.message,
+        stack: signOutError.stack,
+      });
+    }
+
+    // Google ile giriş yap
+    try {
+      const userInfo = await GoogleSignin.signIn();
+      console.log('Google Sign-In Success:', {
+        idToken: userInfo.idToken ? 'Present' : 'Missing',
+        user: userInfo.user,
+      });
+
+      const googleCredential = auth.GoogleAuthProvider.credential(
+        userInfo.idToken,
+      );
+
+      // Firebase'e giriş yap
+      const result = await auth().signInWithCredential(googleCredential);
+
+      // Yeni kullanıcı kontrolü ve kayıt
+      if (result.additionalUserInfo.isNewUser) {
+        await database()
+          .ref(`users/${result.user.uid}`)
+          .set({
+            email: result.user.email,
+            name: result.user.displayName.split(' ')[0],
+            surname: result.user.displayName.split(' ')[1] || '',
+            role: 'user',
+            cafename: 'usercafe',
+            createdAt: database.ServerValue.TIMESTAMP,
+          });
+      }
+
+      return {
+        success: true,
+        user: result.user,
+        isNewUser: result.additionalUserInfo.isNewUser,
+      };
+    } catch (signInError) {
+      console.error('Google Sign-In Detailed Error:', {
+        name: signInError.name,
+        code: signInError.code,
+        message: signInError.message,
+        stack: signInError.stack,
+        details: signInError.details || 'No details available',
+      });
+
+      // API Exception detayları
+      if (signInError.code === 'DEVELOPER_ERROR') {
+        console.error('Developer Error Details:', {
+          config: await GoogleSignin.getTokens(),
+          currentUser: await GoogleSignin.getCurrentUser(),
+        });
+      }
+
+      return {
+        success: false,
+        error: {
+          type: 'SignIn',
+          details: signInError,
+        },
+      };
+    }
+  } catch (error) {
+    console.error('General Error:', {
+      name: error.name,
+      code: error.code,
+      message: error.message,
+      stack: error.stack,
+    });
+    return {
+      success: false,
+      error: {
+        type: 'General',
+        details: error,
+      },
+    };
+  }
+};
 
 export const signUp = async (email, password, name, surname) => {
   try {
@@ -36,11 +153,16 @@ export const signIn = async (email, password) => {
       email,
       password,
     );
+
+    // Kullanıcı bilgilerinin tam olarak yüklenmesini bekle
+    await userCredential.user.reload();
+
     return {
       success: true,
       user: userCredential.user,
     };
   } catch (error) {
+    console.error('SignIn error:', error);
     return {
       success: false,
       error: error,
@@ -287,5 +409,37 @@ export const redeemGift = async (userId, cafeName, couponId) => {
     };
   } catch (error) {
     return {success: false, error: error.message};
+  }
+};
+
+// Bildirim gönderme fonksiyonu
+export const sendPushNotification = async (userId, title, body, data = {}) => {
+  try {
+    // Kullanıcının token'ını al
+    const userSnapshot = await database()
+      .ref(`users/${userId}/fcmToken`)
+      .once('value');
+    const fcmToken = userSnapshot.val();
+
+    if (!fcmToken) return;
+
+    // Cloud Function'a istek at
+    const response = await fetch('YOUR_CLOUD_FUNCTION_URL', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: fcmToken,
+        title,
+        body,
+        data,
+      }),
+    });
+
+    return response.json();
+  } catch (error) {
+    console.error('Send notification error:', error);
+    return null;
   }
 };

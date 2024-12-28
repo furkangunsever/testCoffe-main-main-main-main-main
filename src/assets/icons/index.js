@@ -32,8 +32,9 @@ const revenue_icon = require('./revenue_icon.png');
 const reward_icon = require('./reward_icon.png');
 const sales_icon = require('./sales_icon.png');
 const search_icon = require('./search_icon.png');
-const star= require('./star.png');
-const star_1= require('./star_1.png');
+const star = require('./star.png');
+const star_1 = require('./star_1.png');
+const google_icon = require('./google_icon.png');
 export {
   add_user_icon,
   admin_icon,
@@ -71,4 +72,5 @@ export {
   search_icon,
   star,
   star_1,
+  google_icon,
 };

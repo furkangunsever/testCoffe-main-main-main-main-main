@@ -9,6 +9,7 @@ import Admin from '../screens/Admin/Admin';
 import SuperAdmin from '../screens/Admin/SuperAdmin';
 import Notifications from '../screens/Settings/Notifications';
 import Privacy from '../screens/Settings/Privacy';
+import Privacy_policy from '../screens/Settings/Privacy_policy';
 import Help from '../screens/Settings/Help';
 import TabNavigator from './TabNav';
 
@@ -72,6 +73,7 @@ const StackNavigator = ({
       <Stack.Screen name="MainTabs" component={TabNavigator} />
       <Stack.Screen name="Notifications" component={Notifications} />
       <Stack.Screen name="Privacy" component={Privacy} />
+      <Stack.Screen name="Privacy_policy" component={Privacy_policy} />
       <Stack.Screen name="Help" component={Help} />
     </Stack.Navigator>
   );

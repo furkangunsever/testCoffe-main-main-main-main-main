@@ -9,7 +9,9 @@ import {
   Alert,
   ScrollView,
   SafeAreaView,
+  Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 import {user_icon} from '../../assets/images';
 import {
@@ -19,7 +21,14 @@ import {
   logout_icon,
   notification_icon,
   privacy_icon,
+  delete_icon,
 } from '../../assets/icons';
+import NotificationService from '../../services/NotificationService';
+import {signOut} from '../../config/firebase';
+import database from '@react-native-firebase/database';
+
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 const Profil = ({navigation}) => {
   const currentUser = auth().currentUser;
@@ -44,7 +53,7 @@ const Profil = ({navigation}) => {
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     Alert.alert('Çıkış Yap', 'Çıkış yapmak istediğinizden emin misiniz?', [
       {
         text: 'İptal',
@@ -55,13 +64,89 @@ const Profil = ({navigation}) => {
         style: 'destructive',
         onPress: async () => {
           try {
-            await auth().signOut();
+            const currentUser = auth().currentUser;
+
+            await AsyncStorage.removeItem('selectedCafe');
+
+            if (currentUser) {
+              await auth().signOut();
+            }
+
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
           } catch (error) {
-            Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu.');
+            console.error('Çıkış hatası:', error);
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
           }
         },
       },
     ]);
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      'Hesap Silme',
+      'Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      [
+        {
+          text: 'İptal',
+          style: 'cancel',
+        },
+        {
+          text: 'Evet, Sil',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const currentUser = auth().currentUser;
+
+              if (currentUser) {
+                await database().ref(`users/${currentUser.uid}`).remove();
+
+                await currentUser.delete();
+
+                Alert.alert('Başarılı', 'Hesabınız başarıyla silindi.');
+
+                navigation.reset({
+                  index: 0,
+                  routes: [{name: 'Login'}],
+                });
+              }
+            } catch (error) {
+              console.error('Delete Account Error:', error);
+
+              if (error.code === 'auth/requires-recent-login') {
+                Alert.alert(
+                  'Hata',
+                  'Güvenlik nedeniyle hesabınızı silmek için yeniden giriş yapmanız gerekmektedir.',
+                  [
+                    {
+                      text: 'Tamam',
+                      onPress: async () => {
+                        await signOut();
+                        navigation.reset({
+                          index: 0,
+                          routes: [{name: 'Login'}],
+                        });
+                      },
+                    },
+                  ],
+                );
+              } else {
+                Alert.alert(
+                  'Hata',
+                  'Hesap silinirken bir hata oluştu. Lütfen tekrar deneyin.',
+                );
+              }
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -70,18 +155,23 @@ const Profil = ({navigation}) => {
         <Text style={styles.headerTitle}>Profil</Text>
       </View>
 
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.profileSection}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}>
+        <View style={styles.profileCard}>
           <View style={styles.avatarContainer}>
-            <Image source={user_icon} style={styles.avatar} />
-            {!isEditing && (
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => setIsEditing(true)}>
-                <Image source={edit_icon} style={styles.editIcon} />
-              </TouchableOpacity>
-            )}
+            <View style={styles.avatarWrapper}>
+              <Image source={user_icon} style={styles.avatar} />
+              {!isEditing && (
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() => setIsEditing(true)}>
+                  <Image source={edit_icon} style={styles.editIcon} />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
+
           <View style={styles.infoContainer}>
             {isEditing ? (
               <>
@@ -125,36 +215,67 @@ const Profil = ({navigation}) => {
         </View>
 
         <View style={styles.settingsSection}>
-          <TouchableOpacity
-            style={styles.settingsItem}
-            onPress={() => navigation.navigate('Notifications')}>
-            <Image source={notification_icon} style={styles.settingsIcon} />
-            <Text style={styles.settingsText}>Bildirimler</Text>
-            <Image source={arrow_right} style={styles.arrowIcon} />
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Ayarlar</Text>
+          <View style={styles.settingsCard}>
+            <TouchableOpacity
+              style={styles.settingsItem}
+              onPress={() => navigation.navigate('Notifications')}>
+              <View style={styles.settingsLeft}>
+                <View style={[styles.iconWrapper, styles.notificationIcon]}>
+                  <Image
+                    source={notification_icon}
+                    style={styles.settingsIcon}
+                  />
+                </View>
+                <Text style={styles.settingsText}>Bildirimler</Text>
+              </View>
+              <Image source={arrow_right} style={styles.arrowIcon} />
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.settingsItem}
-            onPress={() => navigation.navigate('Privacy')}>
-            <Image source={privacy_icon} style={styles.settingsIcon} />
-            <Text style={styles.settingsText}>Gizlilik</Text>
-            <Image source={arrow_right} style={styles.arrowIcon} />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.settingsItem}
+              onPress={() => navigation.navigate('Privacy')}>
+              <View style={styles.settingsLeft}>
+                <View style={[styles.iconWrapper, styles.privacyIcon]}>
+                  <Image source={privacy_icon} style={styles.settingsIcon} />
+                </View>
+                <Text style={styles.settingsText}>Gizlilik</Text>
+              </View>
+              <Image source={arrow_right} style={styles.arrowIcon} />
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.settingsItem}
-            onPress={() => navigation.navigate('Help')}>
-            <Image source={help_icon} style={styles.settingsIcon} />
-            <Text style={styles.settingsText}>Yardım</Text>
-            <Image source={arrow_right} style={styles.arrowIcon} />
+            <TouchableOpacity
+              style={styles.settingsItem}
+              onPress={() => navigation.navigate('Help')}>
+              <View style={styles.settingsLeft}>
+                <View style={[styles.iconWrapper, styles.helpIcon]}>
+                  <Image source={help_icon} style={styles.settingsIcon} />
+                </View>
+                <Text style={styles.settingsText}>Yardım</Text>
+              </View>
+              <Image source={arrow_right} style={styles.arrowIcon} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.settingsItem, styles.deleteAccountItem]}
+              onPress={handleDeleteAccount}>
+              <View style={styles.settingsLeft}>
+                <View style={[styles.iconWrapper, styles.deleteAccountIcon]}>
+                  <Image source={delete_icon} style={styles.settingsIcon} />
+                </View>
+                <Text style={styles.deleteAccountText}>Hesabı Sil</Text>
+              </View>
+              <Image source={arrow_right} style={styles.arrowIcon} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.logoutContainer}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Çıkış Yap</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Image source={logout_icon} style={styles.logoutIcon} />
-        <Text style={styles.logoutText}>Çıkış Yap</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -165,49 +286,67 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   header: {
-    padding: 16,
+    padding: windowHeight * 0.02,
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: windowWidth * 0.06,
     fontWeight: '600',
     color: '#4A3428',
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
   },
-  profileSection: {
+  profileCard: {
     backgroundColor: '#FFF',
-    padding: 20,
+    borderRadius: windowWidth * 0.05,
+    margin: windowWidth * 0.04,
+    padding: windowWidth * 0.05,
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
   },
   avatarContainer: {
+    marginBottom: windowHeight * 0.02,
+  },
+  avatarWrapper: {
     position: 'relative',
-    marginBottom: 16,
+    padding: windowWidth * 0.02,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: windowWidth * 0.25,
+    height: windowWidth * 0.25,
+    borderRadius: windowWidth * 0.125,
     backgroundColor: '#F5E6D3',
-    padding: 20,
   },
   editButton: {
     position: 'absolute',
-    right: -8,
-    bottom: -8,
+    right: 0,
+    bottom: 0,
     backgroundColor: '#4A3428',
-    padding: 8,
-    borderRadius: 20,
-    elevation: 2,
+    padding: windowWidth * 0.025,
+    borderRadius: windowWidth * 0.06,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   editIcon: {
-    width: 20,
-    height: 20,
+    width: windowWidth * 0.045,
+    height: windowWidth * 0.045,
     tintColor: '#FFF',
   },
   infoContainer: {
@@ -215,87 +354,148 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   nameText: {
-    fontSize: 24,
+    fontSize: windowWidth * 0.055,
     fontWeight: '600',
     color: '#4A3428',
-    marginBottom: 4,
+    marginBottom: windowHeight * 0.01,
   },
   emailText: {
-    fontSize: 16,
+    fontSize: windowWidth * 0.04,
     color: '#666',
   },
   inputGroup: {
     width: '100%',
-    marginBottom: 16,
+    marginBottom: windowHeight * 0.02,
   },
   label: {
-    fontSize: 14,
+    fontSize: windowWidth * 0.035,
     color: '#666',
-    marginBottom: 8,
+    marginBottom: windowHeight * 0.01,
   },
   input: {
     backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+    borderRadius: windowWidth * 0.02,
+    padding: windowWidth * 0.04,
+    fontSize: windowWidth * 0.04,
     color: '#000',
   },
   saveButton: {
     backgroundColor: '#4A3428',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    marginTop: 16,
+    paddingVertical: windowHeight * 0.015,
+    paddingHorizontal: windowWidth * 0.08,
+    borderRadius: windowWidth * 0.02,
+    marginTop: windowHeight * 0.02,
   },
   saveButtonText: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: windowWidth * 0.04,
     fontWeight: '600',
   },
   settingsSection: {
+    padding: windowWidth * 0.04,
+  },
+  sectionTitle: {
+    fontSize: windowWidth * 0.045,
+    fontWeight: '600',
+    color: '#4A3428',
+    marginBottom: windowHeight * 0.015,
+    marginLeft: windowWidth * 0.02,
+  },
+  settingsCard: {
     backgroundColor: '#FFF',
-    marginTop: 16,
+    borderRadius: windowWidth * 0.05,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
   },
   settingsItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'space-between',
+    padding: windowWidth * 0.04,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: '#F0F0F0',
+  },
+  lastItem: {
+    borderBottomWidth: 0,
+  },
+  settingsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconWrapper: {
+    width: windowWidth * 0.1,
+    height: windowWidth * 0.1,
+    borderRadius: windowWidth * 0.02,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: windowWidth * 0.03,
+  },
+  notificationIcon: {
+    backgroundColor: '#FFE5E5',
+  },
+  privacyIcon: {
+    backgroundColor: '#E5F1FF',
+  },
+  helpIcon: {
+    backgroundColor: '#E5FFE5',
   },
   settingsIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 16,
+    width: windowWidth * 0.055,
+    height: windowWidth * 0.055,
+    tintColor: '#4A3428',
   },
   settingsText: {
-    flex: 1,
-    fontSize: 16,
+    fontSize: windowWidth * 0.04,
     color: '#333',
   },
   arrowIcon: {
-    width: 20,
-    height: 20,
+    width: windowWidth * 0.05,
+    height: windowWidth * 0.05,
     tintColor: '#666',
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: windowWidth * 0.4,
     justifyContent: 'center',
-    backgroundColor: '#FFF',
-    padding: 16,
+    backgroundColor: '#D44747FF',
+    padding: windowHeight * 0.02,
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
+    borderRadius: windowWidth * 0.1,
   },
   logoutIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 8,
+    width: windowWidth * 0.06,
+    height: windowWidth * 0.06,
+    marginRight: windowWidth * 0.02,
+    tintColor: 'white',
   },
   logoutText: {
-    fontSize: 16,
-    color: '#FF3B30',
+    fontSize: windowWidth * 0.04,
+    color: 'white',
     fontWeight: '600',
+  },
+  deleteAccountItem: {
+    borderBottomWidth: 0,
+  },
+  deleteAccountIcon: {
+    backgroundColor: '#FFE5E5',
+  },
+  deleteAccountText: {
+    color: '#FF3B30',
+    fontSize: windowWidth * 0.04,
+  },
+  logoutContainer: {
+    alignItems: 'center',
+    width: '100%',
+    marginTop: windowWidth * 0.05,
+    marginBottom: 20,
   },
 });
 

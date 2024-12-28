@@ -8,7 +8,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import { back_icon } from '../../assets/icons';
+import {back_icon} from '../../assets/icons';
 
 const Privacy = ({navigation}) => {
   return (
@@ -17,10 +17,7 @@ const Privacy = ({navigation}) => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Image
-            source={back_icon}
-            style={styles.backIcon}
-          />
+          <Image source={back_icon} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Gizlilik</Text>
       </View>
@@ -57,7 +54,9 @@ const Privacy = ({navigation}) => {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Privacy_policy')}>
           <Text style={styles.buttonText}>Gizlilik Politikası</Text>
         </TouchableOpacity>
       </ScrollView>

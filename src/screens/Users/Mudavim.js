@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -6,23 +6,56 @@ import {
   Image,
   Dimensions,
   TouchableOpacity,
-  Alert,
   SafeAreaView,
+  Animated,
 } from 'react-native';
+import Modal from 'react-native-modal';
 import QRCode from 'react-native-qrcode-svg';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
+import LottieView from 'lottie-react-native';
 import {back_icon} from '../../assets/icons';
 import {arabica_logo, coffe, harputdibek_logo} from '../../assets/images';
+import CustomModal from '../../components/Modal/Modal';
+import animationData from '../../assets/Animation.json';
+import Svg, {Circle, Text as SvgText} from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 const Mudavim = ({route, navigation}) => {
-  const cafeName = route?.params?.cafeName;
-  const logoPath = route?.params?.logoPath;
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [modalAnimation] = useState(new Animated.Value(0));
+  const [selectedCafe, setSelectedCafe] = useState(null);
   const currentUser = auth().currentUser;
   const [progress, setProgress] = useState(0);
   const [userName, setUserName] = useState('');
+  const lottieRef = useRef(null);
+
+  useEffect(() => {
+    const loadSelectedCafe = async () => {
+      try {
+        const routeCafeName = route?.params?.cafeName;
+        if (routeCafeName) {
+          setSelectedCafe(routeCafeName);
+          return;
+        }
+
+        const storedCafe = await AsyncStorage.getItem('selectedCafe');
+        if (storedCafe) {
+          setSelectedCafe(storedCafe);
+        } else {
+          setSelectedCafe('Arabica Coffee');
+        }
+      } catch (error) {
+        console.error('Kafe bilgisi yükleme hatası:', error);
+        setSelectedCafe('Arabica Coffee');
+      }
+    };
+
+    loadSelectedCafe();
+  }, [route?.params?.cafeName]);
 
   useEffect(() => {
     if (currentUser) {
@@ -31,39 +64,65 @@ const Mudavim = ({route, navigation}) => {
   }, [currentUser]);
 
   useEffect(() => {
-    if (currentUser && cafeName) {
+    if (currentUser && selectedCafe) {
       const userCafeRef = database().ref(
-        `users/${currentUser.uid}/cafes/${cafeName}`,
+        `users/${currentUser.uid}/cafes/${selectedCafe}`,
       );
+
       const unsubscribe = userCafeRef.on('value', snapshot => {
         const cafeData = snapshot.val();
         if (cafeData) {
           setProgress(cafeData.coffeeCount || 0);
 
           if (cafeData.coffeeCount === 5 && cafeData.hasGift) {
-            Alert.alert(
-              'Tebrikler! 🎉',
-              'Sadaktinizi kanıtladınız🥳! Kuponlarım sayfasından hediye kahve kuponunuzu görebilirsiniz.',
-              [{text: 'Tamam', style: 'default'}],
-              {cancelable: true},
-            );
+            setModalVisible(true);
+            Animated.spring(modalAnimation, {
+              toValue: 1,
+              useNativeDriver: true,
+            }).start();
           }
         }
       });
 
       return () => userCafeRef.off('value', unsubscribe);
     }
-  }, [currentUser, cafeName]);
+  }, [currentUser, selectedCafe]);
+
+  useEffect(() => {
+    if (lottieRef.current) {
+      lottieRef.current.play();
+    }
+  }, []);
 
   const qrValue = JSON.stringify({
     userId: currentUser?.uid || 'guest',
     userEmail: currentUser?.email || 'guest',
-    cafeName: cafeName,
+    cafeName: selectedCafe,
     timestamp: new Date().toISOString(),
   });
 
+  const getLogo = () => {
+    return selectedCafe === 'Arabica Coffee' ? arabica_logo : harputdibek_logo;
+  };
+
+  const progressPercentage = (progress / 5) * 100;
+  const circleLength = 2 * Math.PI * 45;
+  const progressLength = (circleLength * progressPercentage) / 100;
+  const remainingLength = circleLength - progressLength;
+
   return (
     <SafeAreaView style={styles.container}>
+      <CustomModal
+        isVisible={isModalVisible}
+        onClose={() => setModalVisible(false)}
+        title="Tebrikler! 🎉"
+        message={
+          'Sadakatinizi kanıtladınız! 🥳\nKuponlarım sayfasından hediye kahve kuponunuzu görebilirsiniz.'
+        }
+        buttonText="Tamam"
+        icon={coffe}
+        iconTintColor="#4A3428"
+      />
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -80,16 +139,7 @@ const Mudavim = ({route, navigation}) => {
         </View>
 
         <View style={styles.logoContainer}>
-          {logoPath && (
-            <Image
-              source={
-                logoPath === '../../assets/images/arabica_logo.png'
-                  ? arabica_logo
-                  : harputdibek_logo
-              }
-              style={styles.logo}
-            />
-          )}
+          <Image source={getLogo()} style={styles.logo} resizeMode="contain" />
         </View>
 
         <View style={styles.qrSection}>
@@ -106,17 +156,44 @@ const Mudavim = ({route, navigation}) => {
         </View>
 
         <View style={styles.progressSection}>
-          <View style={styles.imageContainer}>
-            <Image source={coffe} style={styles.mudavimImage} />
+          <View style={styles.circularProgressContainer}>
+            <View style={styles.progressWrapper}>
+              <Svg width="120" height="120" viewBox="0 0 100 100">
+                <Circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  stroke="#F5E6D3"
+                  strokeWidth="10"
+                  fill="none"
+                />
+                <Circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  stroke="#4A3428"
+                  strokeWidth="10"
+                  fill="none"
+                  strokeDasharray={`${progressLength} ${remainingLength}`}
+                  strokeDashoffset={circleLength / 4}
+                  transform="rotate(-90 50 50)"
+                />
+              </Svg>
+              <View style={styles.lottieWrapper}>
+                <LottieView
+                  ref={lottieRef}
+                  source={animationData}
+                  style={styles.circleLottie}
+                  autoPlay
+                  loop
+                />
+              </View>
+            </View>
           </View>
-
-          <View style={styles.progressBarContainer}>
-            <View
-              style={[styles.progressBar, {width: `${(progress / 5) * 100}%`}]}
-            />
+          <View style={styles.progressTextWrapper}>
+            <Text style={styles.progressCountText}>{`${progress}/5`}</Text>
+            <Text style={styles.progressText}>Kahve</Text>
           </View>
-
-          <Text style={styles.progressText}>{progress}/5 Kahve</Text>
         </View>
       </View>
     </SafeAreaView>
@@ -131,104 +208,135 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'center',
+    padding: windowHeight * 0.02,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+    position: 'relative',
+    height: windowHeight * 0.08,
   },
   backButton: {
-    marginRight: 16,
-    padding: 4,
+    position: 'absolute',
+    left: windowWidth * 0.04,
+    padding: windowWidth * 0.01,
   },
   backIcon: {
-    width: 24,
-    height: 24,
+    width: windowWidth * 0.06,
+    height: windowWidth * 0.06,
     tintColor: '#4A3428',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: windowWidth * 0.06,
     fontWeight: '500',
     color: '#4A3428',
     letterSpacing: 1,
+    fontStyle: 'italic',
   },
   welcomeSection: {
-    marginTop: 24,
-    marginBottom: 16,
-    paddingHorizontal: 16,
+    width: '100%',
+    paddingHorizontal: windowWidth * 0.04,
+    paddingVertical: windowHeight * 0.02,
+    alignItems: 'flex-start',
   },
   welcomeText: {
-    fontSize: 16,
+    fontSize: windowWidth * 0.04,
     color: '#666',
-    marginBottom: 4,
+    marginBottom: windowHeight * 0.005,
   },
   userNameText: {
-    fontSize: 20,
+    fontSize: windowWidth * 0.05,
     fontWeight: 'bold',
     color: '#4A3428',
   },
   content: {
     flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: windowWidth * 0.04,
   },
   logoContainer: {
-    width: '100%',
-    height: windowWidth * 0.25,
+    width: windowWidth * 0.5,
+    height: windowHeight * 0.12,
+    backgroundColor: '#FFFFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: windowHeight * 0.03,
+    borderRadius: 10,
   },
   logo: {
-    width: '60%',
-    height: '100%',
+    width: windowWidth * 0.5,
+    height: windowWidth * 0.25,
     resizeMode: 'contain',
   },
   qrSection: {
     alignItems: 'center',
     width: '100%',
-    marginBottom: 32,
+    marginBottom: windowHeight * 0.04,
   },
   qrWrapper: {
-    padding: 20,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
+    padding: windowWidth * 0.05,
+    backgroundColor: '#F5E6D3',
+    borderRadius: windowWidth * 0.03,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   instructionText: {
-    marginTop: 16,
-    fontSize: 14,
+    marginTop: windowHeight * 0.05,
+    fontSize: windowWidth * 0.035,
     textAlign: 'center',
     color: '#666',
+    fontStyle: 'italic',
   },
   progressSection: {
     alignItems: 'center',
     width: '100%',
     marginTop: 'auto',
-    marginBottom: 32,
+    marginBottom: windowHeight * 0.04,
   },
-  imageContainer: {
-    marginBottom: 16,
+  circularProgressContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: windowHeight * 0.02,
   },
-  mudavimImage: {
-    width: 80,
-    height: 80,
-    resizeMode: 'contain',
+  progressWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 120,
+    height: 120,
   },
-  progressBarContainer: {
-    width: windowWidth * 0.7,
-    height: 10,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 5,
-    overflow: 'hidden',
-    marginBottom: 8,
+  lottieWrapper: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    top: '50%',
+    left: '50%',
+    transform: [{translateX: -30}, {translateY: -40}],
   },
-  progressBar: {
+  circleLottie: {
+    width: '100%',
     height: '100%',
-    backgroundColor: '#4A3428',
-    borderRadius: 5,
+  },
+  progressTextWrapper: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: windowWidth * 0.35,
+  },
+  progressCountText: {
+    fontSize: windowWidth * 0.04,
+    color: '#4A3428',
+    fontWeight: 'bold',
   },
   progressText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: windowWidth * 0.035,
+    color: '#4A3428',
+    marginTop: 0,
   },
 });
 

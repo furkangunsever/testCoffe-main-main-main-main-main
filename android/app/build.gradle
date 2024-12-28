@@ -117,4 +117,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+    implementation platform('com.google.firebase:firebase-bom:32.7.4')
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.google.android.gms:play-services-base:18.2.0'
 }

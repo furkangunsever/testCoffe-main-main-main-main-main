@@ -5,6 +5,7 @@ import database from '@react-native-firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Routes from './src/routes';
 import {FavoriteProvider} from './src/context/FavoriteContext';
+import NotificationService from './src/services/NotificationService';
 
 const App = () => {
   const [initializing, setInitializing] = useState(true);
@@ -67,6 +68,10 @@ const App = () => {
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber;
+  }, []);
+
+  useEffect(() => {
+    NotificationService.initialize();
   }, []);
 
   if (initializing || isRoleLoading) {

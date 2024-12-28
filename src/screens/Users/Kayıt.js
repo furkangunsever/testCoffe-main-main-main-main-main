@@ -85,9 +85,7 @@ const Kayıt = ({navigation}) => {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled">
+      <View style={styles.mainContainer}>
         <View style={styles.logoContainer}>
           <Image
             source={splash_coffe}
@@ -104,7 +102,10 @@ const Kayıt = ({navigation}) => {
 
           <View style={styles.inputGroup}>
             <View style={styles.inputContainer}>
-              <Image source={user_icon} style={styles.inputIcon} />
+              <Image
+                source={user_icon}
+                style={[styles.inputIcon, {tintColor: '#4A3428'}]}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="Ad"
@@ -115,7 +116,10 @@ const Kayıt = ({navigation}) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Image source={user_icon} style={styles.inputIcon} />
+              <Image
+                source={user_icon}
+                style={[styles.inputIcon, {tintColor: '#4A3428'}]}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="Soyad"
@@ -126,7 +130,10 @@ const Kayıt = ({navigation}) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Image source={email_icon} style={styles.inputIcon} />
+              <Image
+                source={email_icon}
+                style={[styles.inputIcon, {tintColor: '#4A3428'}]}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="E-mail"
@@ -139,7 +146,10 @@ const Kayıt = ({navigation}) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Image source={password_icon} style={styles.inputIcon} />
+              <Image
+                source={password_icon}
+                style={[styles.inputIcon, {tintColor: '#4A3428'}]}
+              />
               <TextInput
                 style={[styles.input, styles.passwordInput]}
                 placeholder="Şifre"
@@ -153,13 +163,16 @@ const Kayıt = ({navigation}) => {
                 onPress={() => setShowPassword(!showPassword)}>
                 <Image
                   source={showPassword ? eye_off : eye}
-                  style={styles.eyeIcon}
+                  style={[styles.eyeIcon, {tintColor: '#4A3428'}]}
                 />
               </TouchableOpacity>
             </View>
 
             <View style={styles.inputContainer}>
-              <Image source={password_icon} style={styles.inputIcon} />
+              <Image
+                source={password_icon}
+                style={[styles.inputIcon, {tintColor: '#4A3428'}]}
+              />
               <TextInput
                 style={[styles.input, styles.passwordInput]}
                 placeholder="Şifre Tekrar"
@@ -173,7 +186,7 @@ const Kayıt = ({navigation}) => {
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                 <Image
                   source={showConfirmPassword ? eye_off : eye}
-                  style={styles.eyeIcon}
+                  style={[styles.eyeIcon, {tintColor: '#4A3428'}]}
                 />
               </TouchableOpacity>
             </View>
@@ -200,7 +213,7 @@ const Kayıt = ({navigation}) => {
             </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -210,8 +223,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFF',
   },
-  scrollContent: {
-    flexGrow: 1,
+  mainContainer: {
+    flex: 1,
   },
   logoContainer: {
     alignItems: 'center',
@@ -228,7 +241,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     padding: 20,
-    paddingTop: 30,
   },
   title: {
     fontSize: 28,
@@ -298,7 +310,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    marginTop: 10,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
