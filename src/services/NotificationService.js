@@ -25,17 +25,35 @@ class NotificationService {
     );
   }
 
-  showNotification(notification) {
-    PushNotification.localNotification({
-      channelId: 'default-channel',
-      title: notification.title,
-      message: notification.body,
-      playSound: true,
-      soundName: 'default',
-      importance: 'high',
-      priority: 'high',
-      vibrate: true,
-    });
+  async showNotification(notification) {
+    try {
+      const userId = auth().currentUser?.uid;
+      if (!userId) return;
+
+      const settings = await AsyncStorage.getItem(
+        `notificationSettings_${userId}`,
+      );
+      if (settings) {
+        const parsedSettings = JSON.parse(settings);
+        if (!parsedSettings.push) {
+          console.log('Push bildirimleri devre dışı');
+          return;
+        }
+      }
+
+      PushNotification.localNotification({
+        channelId: 'default-channel',
+        title: notification.title,
+        message: notification.body,
+        playSound: true,
+        soundName: 'default',
+        importance: 'high',
+        priority: 'high',
+        vibrate: true,
+      });
+    } catch (error) {
+      console.error('Bildirim gösterilirken hata:', error);
+    }
   }
 
   async requestPermission() {
@@ -63,6 +81,20 @@ class NotificationService {
 
   async registerDevice() {
     try {
+      const userId = auth().currentUser?.uid;
+      if (!userId) return false;
+
+      const settings = await AsyncStorage.getItem(
+        `notificationSettings_${userId}`,
+      );
+      if (settings) {
+        const parsedSettings = JSON.parse(settings);
+        if (!parsedSettings.push) {
+          console.log('Push bildirimleri devre dışı - cihaz kaydedilmedi');
+          return false;
+        }
+      }
+
       const hasPermission = await this.requestPermission();
       if (!hasPermission) {
         return false;
@@ -76,20 +108,16 @@ class NotificationService {
         console.log('==================================');
       }
 
-      // Ön planda bildirim izni
       await messaging().requestPermission();
 
-      // Ön planda bildirim dinleyicisi
       this.messageListener = messaging().onMessage(async remoteMessage => {
         console.log('Ön planda bildirim alındı:', remoteMessage);
 
-        // Bildirimi göster
         if (remoteMessage.notification) {
           this.showNotification(remoteMessage.notification);
         }
       });
 
-      // Arka plan bildirimleri için
       messaging().setBackgroundMessageHandler(async remoteMessage => {
         console.log('Arka planda mesaj alındı:', remoteMessage);
         if (remoteMessage.notification) {
@@ -97,7 +125,6 @@ class NotificationService {
         }
       });
 
-      // Uygulama kapalıyken bildirime tıklanma
       messaging()
         .getInitialNotification()
         .then(remoteMessage => {
@@ -109,7 +136,6 @@ class NotificationService {
           }
         });
 
-      // Arka planda bildirime tıklanma
       messaging().onNotificationOpenedApp(remoteMessage => {
         console.log('Arka planda bildirime tıklandı:', remoteMessage);
       });
@@ -152,25 +178,20 @@ class NotificationService {
     }
   }
 
-  // Tüm bildirim ayarlarını başlatan metod
   async initialize() {
     try {
-      // İzinleri kontrol et
       const hasPermission = await this.requestPermission();
       if (!hasPermission) {
         console.log('Bildirim izni reddedildi');
         return false;
       }
 
-      // Cihazı kaydet
       await this.registerDevice();
 
-      // Arka plan mesaj işleyicisi
       messaging().setBackgroundMessageHandler(async remoteMessage => {
         console.log('Arka planda mesaj alındı:', remoteMessage);
       });
 
-      // Uygulama kapalıyken bildirime tıklanma durumu
       messaging()
         .getInitialNotification()
         .then(remoteMessage => {
@@ -182,7 +203,6 @@ class NotificationService {
           }
         });
 
-      // Arka planda bildirime tıklanma durumu
       messaging().onNotificationOpenedApp(remoteMessage => {
         console.log('Arka planda bildirime tıklandı:', remoteMessage);
       });

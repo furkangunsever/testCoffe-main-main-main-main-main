@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import {back_icon} from '../../assets/icons';
 import NotificationService from '../../services/NotificationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import auth from '@react-native-firebase/auth';
 
 const Notifications = ({navigation}) => {
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -18,8 +20,34 @@ const Notifications = ({navigation}) => {
   const [promotionalNotifications, setPromotionalNotifications] =
     useState(false);
 
+  useEffect(() => {
+    loadNotificationSettings();
+  }, []);
+
+  const loadNotificationSettings = async () => {
+    try {
+      const userId = auth().currentUser?.uid;
+      if (!userId) return;
+
+      const settings = await AsyncStorage.getItem(
+        `notificationSettings_${userId}`,
+      );
+      if (settings) {
+        const parsedSettings = JSON.parse(settings);
+        setPushNotifications(parsedSettings.push);
+        setEmailNotifications(parsedSettings.email);
+        setPromotionalNotifications(parsedSettings.promotional);
+      }
+    } catch (error) {
+      console.error('Bildirim ayarları yüklenirken hata:', error);
+    }
+  };
+
   const handlePushToggle = async value => {
     try {
+      const userId = auth().currentUser?.uid;
+      if (!userId) return;
+
       if (value) {
         const granted = await NotificationService.requestPermission();
         if (!granted) {
@@ -33,8 +61,18 @@ const Notifications = ({navigation}) => {
       } else {
         await NotificationService.unregisterDevice();
       }
+
       setPushNotifications(value);
-      await saveNotificationSettings('push', value);
+
+      const settings = {
+        push: value,
+        email: emailNotifications,
+        promotional: promotionalNotifications,
+      };
+      await AsyncStorage.setItem(
+        `notificationSettings_${userId}`,
+        JSON.stringify(settings),
+      );
     } catch (error) {
       console.error('Push bildirimi ayarlanırken hata:', error);
       Alert.alert('Hata', 'Bildirim ayarları güncellenirken bir hata oluştu.');
