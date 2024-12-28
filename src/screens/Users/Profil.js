@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -33,22 +33,40 @@ const windowHeight = Dimensions.get('window').height;
 const Profil = ({navigation}) => {
   const currentUser = auth().currentUser;
   const [isEditing, setIsEditing] = useState(false);
-  const [firstName, setFirstName] = useState(
-    currentUser?.displayName?.split(' ')[0] || '',
-  );
-  const [lastName, setLastName] = useState(
-    currentUser?.displayName?.split(' ')[1] || '',
-  );
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+
+  // Kullanıcı bilgilerini yükle
+  useEffect(() => {
+    if (currentUser) {
+      const userRef = database().ref(`users/${currentUser.uid}`);
+      userRef.once('value').then(snapshot => {
+        const userData = snapshot.val();
+        if (userData) {
+          setFirstName(userData.name || '');
+          setLastName(userData.surname || '');
+        }
+      });
+    }
+  }, [currentUser]);
 
   const handleSave = async () => {
     try {
-      const newDisplayName = `${firstName} ${lastName}`.trim();
-      await currentUser.updateProfile({
-        displayName: newDisplayName,
+      if (!firstName.trim() || !lastName.trim()) {
+        Alert.alert('Hata', 'Ad ve soyad alanları boş bırakılamaz.');
+        return;
+      }
+
+      // Database'i güncelle
+      await database().ref(`users/${currentUser.uid}`).update({
+        name: firstName.trim(),
+        surname: lastName.trim(),
       });
+
       setIsEditing(false);
       Alert.alert('Başarılı', 'Profil bilgileriniz güncellendi.');
     } catch (error) {
+      console.error('Profile update error:', error);
       Alert.alert('Hata', 'Profil güncellenirken bir hata oluştu.');
     }
   };
@@ -206,7 +224,7 @@ const Profil = ({navigation}) => {
             ) : (
               <>
                 <Text style={styles.nameText}>
-                  {currentUser?.displayName || 'İsimsiz Kullanıcı'}
+                  {`${firstName} ${lastName}`.trim() || 'İsimsiz Kullanıcı'}
                 </Text>
                 <Text style={styles.emailText}>{currentUser?.email}</Text>
               </>

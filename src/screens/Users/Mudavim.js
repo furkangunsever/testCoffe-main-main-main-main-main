@@ -59,7 +59,16 @@ const Mudavim = ({route, navigation}) => {
 
   useEffect(() => {
     if (currentUser) {
-      setUserName(currentUser.displayName || '');
+      const userRef = database().ref(`users/${currentUser.uid}`);
+      userRef.once('value').then(snapshot => {
+        const userData = snapshot.val();
+        if (userData) {
+          const fullName = `${userData.name || ''} ${
+            userData.surname || ''
+          }`.trim();
+          setUserName(fullName || 'İsimsiz Kullanıcı');
+        }
+      });
     }
   }, [currentUser]);
 
@@ -134,7 +143,7 @@ const Mudavim = ({route, navigation}) => {
 
       <View style={styles.content}>
         <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeText}>Hoş Geldiniz,</Text>
+          <Text style={styles.welcomeText}>Hoş Geldiniz</Text>
           <Text style={styles.userNameText}>{userName}</Text>
         </View>
 

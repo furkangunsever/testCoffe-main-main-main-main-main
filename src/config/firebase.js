@@ -149,7 +149,6 @@ export const signUp = async (email, password, name, surname) => {
         'Kayıt işlemi başarılı! Lütfen email adresinize gönderilen doğrulama linkine tıklayın.',
     };
   } catch (error) {
-    console.error('Signup Error:', error);
     let errorMessage = 'Kayıt işlemi sırasında bir hata oluştu.';
 
     switch (error.code) {
@@ -166,7 +165,7 @@ export const signUp = async (email, password, name, surname) => {
         errorMessage = 'Şifre çok zayıf.';
         break;
       default:
-        errorMessage = error.message;
+        errorMessage = 'Kayıt işlemi sırasında bir hata oluştu.';
     }
 
     return {
@@ -206,10 +205,40 @@ export const signIn = async (email, password) => {
       user: userCredential.user,
     };
   } catch (error) {
-    console.error('Login Error:', error);
+    // Hata mesajını kullanıcı dostu hale getir
+    let errorMessage = 'Giriş yapılırken bir hata oluştu.';
+    let errorCode = error.code;
+
+    switch (error.code) {
+      case 'auth/invalid-email':
+        errorMessage = 'Geçersiz e-posta adresi.';
+        break;
+      case 'auth/user-disabled':
+        errorMessage = 'Bu hesap devre dışı bırakılmıştır.';
+        break;
+      case 'auth/invalid-credential':
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+        // Güvenlik nedeniyle tüm kimlik doğrulama hatalarında aynı mesajı göster
+        errorMessage = 'Böyle bir hesap bulunmamaktadır.';
+        errorCode = 'auth/user-not-found';
+        break;
+      case 'auth/too-many-requests':
+        errorMessage =
+          'Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin.';
+        break;
+      default:
+        errorMessage =
+          'Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.';
+    }
+
+    // Sadece gerekli bilgileri döndür
     return {
       success: false,
-      error,
+      error: {
+        code: errorCode,
+        message: errorMessage,
+      },
     };
   }
 };

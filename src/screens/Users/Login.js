@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import {eye, eye_off, google_icon} from '../../assets/icons';
 import database from '@react-native-firebase/database';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {signInWithGoogle} from '../../config/firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({navigation}) => {
   const [email, setEmail] = useState('');
@@ -26,6 +27,50 @@ const Login = ({navigation}) => {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [savedAccounts, setSavedAccounts] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Kayıtlı hesapları yükle
+  useEffect(() => {
+    loadSavedAccounts();
+  }, []);
+
+  const loadSavedAccounts = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('savedAccounts');
+      if (saved) {
+        setSavedAccounts(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Error loading saved accounts:', error);
+    }
+  };
+
+  const saveAccount = async (emailToSave, passwordToSave) => {
+    try {
+      let accounts = [...savedAccounts];
+      const existingIndex = accounts.findIndex(
+        acc => acc.email === emailToSave,
+      );
+
+      if (existingIndex !== -1) {
+        // Varolan hesabı güncelle
+        accounts[existingIndex] = {
+          email: emailToSave,
+          password: passwordToSave,
+        };
+      } else {
+        // Yeni hesap ekle
+        accounts.unshift({email: emailToSave, password: passwordToSave});
+        if (accounts.length > 5) accounts.pop(); // Maksimum 5 hesap sakla
+      }
+
+      await AsyncStorage.setItem('savedAccounts', JSON.stringify(accounts));
+      setSavedAccounts(accounts);
+    } catch (error) {
+      console.error('Error saving account:', error);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -81,6 +126,11 @@ const Login = ({navigation}) => {
         targetRoute = 'SuperAdmin';
       } else if (userRole === 'admin') {
         targetRoute = 'AdminScreen';
+      }
+
+      // Başarılı giriş durumunda ve rememberMe seçiliyse hesabı kaydet
+      if (rememberMe) {
+        await saveAccount(email, password);
       }
 
       // Navigation stack'i temizle ve yeni route'a yönlendir
@@ -166,6 +216,50 @@ const Login = ({navigation}) => {
     }
   };
 
+  // Email input için önerileri göster/gizle
+  const handleEmailFocus = () => {
+    if (savedAccounts.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  const handleEmailBlur = () => {
+    // Biraz gecikmeyle kapat ki seçim yapılabilsin
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
+  };
+
+  const selectAccount = account => {
+    setEmail(account.email);
+    setPassword(account.password);
+    setShowSuggestions(false);
+  };
+
+  // Email değiştiğinde önerileri kontrol et
+  const handleEmailChange = text => {
+    setEmail(text);
+
+    // Email boş veya önceden kaydedilmiş bir email ile eşleşiyorsa önerileri göster
+    if (
+      text === '' ||
+      savedAccounts.some(account =>
+        account.email.toLowerCase().includes(text.toLowerCase()),
+      )
+    ) {
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  // Önerileri filtrele
+  const getFilteredAccounts = () => {
+    return savedAccounts.filter(account =>
+      account.email.toLowerCase().includes(email.toLowerCase()),
+    );
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
@@ -196,16 +290,33 @@ const Login = ({navigation}) => {
             Giriş yapmak veya kayıt olmak için e-posta ve şifrenizi giriniz.
           </Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="E-mail"
-            placeholderTextColor="#666"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            editable={!loading}
-          />
+          <View style={styles.inputContainer}>
+            {showSuggestions && savedAccounts.length > 0 && (
+              <View style={styles.suggestionContainer}>
+                {getFilteredAccounts().map((account, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.suggestionItem}
+                    onPress={() => selectAccount(account)}>
+                    <Text style={styles.suggestionText}>{account.email}</Text>
+                    <Text style={styles.suggestionSubText}>Kayıtlı Hesap</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            <TextInput
+              style={styles.input}
+              placeholder="E-mail"
+              placeholderTextColor="#666"
+              value={email}
+              onChangeText={handleEmailChange}
+              onFocus={handleEmailFocus}
+              onBlur={handleEmailBlur}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!loading}
+            />
+          </View>
           <View style={styles.passwordContainer}>
             <TextInput
               style={styles.passwordInput}
@@ -325,6 +436,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 16,
     color: '#000',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
   },
   rememberMeContainer: {
     flexDirection: 'row',
@@ -436,6 +555,48 @@ const styles = StyleSheet.create({
     color: '#4A3428',
     fontSize: 16,
     fontWeight: '600',
+  },
+  inputContainer: {
+    position: 'relative',
+    width: '100%',
+    zIndex: 1,
+  },
+  suggestionContainer: {
+    position: 'absolute',
+    bottom: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    marginBottom: 5,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    maxHeight: 200,
+    overflow: 'hidden',
+    zIndex: 1000,
+  },
+  suggestionItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  suggestionSubText: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
   },
 });
 
