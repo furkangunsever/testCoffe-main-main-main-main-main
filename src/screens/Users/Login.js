@@ -84,7 +84,7 @@ const Login = ({navigation}) => {
       // Firebase auth işlemini bekle
       const result = await signIn(email, password);
 
-      if (!result.success || !result.user) {
+      if (!result.success) {
         let errorMessage = 'Giriş yapılamadı.';
         if (result.error?.code) {
           switch (result.error.code) {
@@ -112,12 +112,7 @@ const Login = ({navigation}) => {
       }
 
       // Kullanıcı rolünü kontrol et
-      const userSnapshot = await database()
-        .ref(`users/${result.user.uid}`)
-        .once('value');
-
-      const userData = userSnapshot.val();
-      const userRole = userData?.role || 'user';
+      const userRole = result.userData?.role || 'user';
 
       // Giriş başarılı olduğunda navigation stack'i temizle ve yeni route'a yönlendir
       let targetRoute = 'Kafeler'; // Varsayılan route
@@ -147,7 +142,7 @@ const Login = ({navigation}) => {
       });
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert('Hata', 'Böyle bir hesap bulunamamaktadır.');
+      Alert.alert('Hata', 'Giriş yapılırken bir hata oluştu.');
     } finally {
       setLoading(false);
     }

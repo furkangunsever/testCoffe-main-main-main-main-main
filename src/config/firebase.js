@@ -181,75 +181,33 @@ export const signIn = async (email, password) => {
       email,
       password,
     );
+    const user = userCredential.user;
 
-    // Email doğrulaması kontrolü
-    if (!userCredential.user.emailVerified) {
-      await auth().signOut();
-      return {
-        success: false,
-        error: {
-          code: 'auth/email-not-verified',
-          message: 'Lütfen email adresinizi doğrulayın.',
-        },
-      };
+    // Kullanıcı verilerini veritabanından al
+    const snapshot = await database().ref(`users/${user.uid}`).once('value');
+    const userData = snapshot.val();
+
+    if (!userData) {
+      throw new Error('Kullanıcı verileri bulunamadı');
     }
 
-    // Email doğrulanmışsa kullanıcı bilgilerini güncelle
-    await database().ref(`users/${userCredential.user.uid}`).update({
-      emailVerified: true,
-      lastLoginAt: database.ServerValue.TIMESTAMP,
-    });
-
-    return {
-      success: true,
-      user: userCredential.user,
-    };
+    return {success: true, user, userData};
   } catch (error) {
-    // Hata mesajını kullanıcı dostu hale getir
-    let errorMessage = 'Giriş yapılırken bir hata oluştu.';
-    let errorCode = error.code;
-
-    switch (error.code) {
-      case 'auth/invalid-email':
-        errorMessage = 'Geçersiz e-posta adresi.';
-        break;
-      case 'auth/user-disabled':
-        errorMessage = 'Bu hesap devre dışı bırakılmıştır.';
-        break;
-      case 'auth/invalid-credential':
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-        // Güvenlik nedeniyle tüm kimlik doğrulama hatalarında aynı mesajı göster
-        errorMessage = 'Böyle bir hesap bulunmamaktadır.';
-        errorCode = 'auth/user-not-found';
-        break;
-      case 'auth/too-many-requests':
-        errorMessage =
-          'Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin.';
-        break;
-      default:
-        errorMessage =
-          'Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.';
-    }
-
-    // Sadece gerekli bilgileri döndür
-    return {
-      success: false,
-      error: {
-        code: errorCode,
-        message: errorMessage,
-      },
-    };
+    console.error('Giriş hatası:', error);
+    return {success: false, error};
   }
 };
 
 export const signOut = async () => {
   try {
-    await auth().signOut();
-    // Direkt olarak Login sayfasına yönlendirilecek
+    const currentUser = auth().currentUser;
+    if (currentUser) {
+      await auth().signOut();
+    }
     return {success: true};
   } catch (error) {
-    return {success: false, error: error.message};
+    console.error('Çıkış hatası:', error);
+    return {success: true}; // Hata olsa bile başarılı döndür
   }
 };
 
@@ -294,50 +252,26 @@ export const checkUserRole = async userId => {
 // Var olan addAdmin fonksiyonunu güncelleyelim
 export const addAdmin = async (email, password, name, surname, cafeName) => {
   try {
-    let userId;
+    // Önce Firebase Authentication'da kullanıcı oluştur
+    const userCredential = await auth().createUserWithEmailAndPassword(
+      email,
+      password,
+    );
+    const user = userCredential.user;
 
-    try {
-      // Önce yeni kullanıcı oluşturmayı dene
-      const userCredential = await auth().createUserWithEmailAndPassword(
-        email,
-        password,
-      );
-      userId = userCredential.user.uid;
-
-      // Yeni kullanıcı için profil güncelle
-      await userCredential.user.updateProfile({
-        displayName: `${name} ${surname}`,
-      });
-    } catch (error) {
-      // Eğer email zaten kullanılıyorsa
-      if (error.code === 'auth/email-already-in-use') {
-        // Email ile giriş yapmayı dene
-        const signInResult = await auth().signInWithEmailAndPassword(
-          email,
-          password,
-        );
-        userId = signInResult.user.uid;
-      } else {
-        // Başka bir hata varsa fırlat
-        throw error;
-      }
-    }
-
-    // Database'e admin rolüyle ekle/güncelle
-    await database().ref(`users/${userId}`).set({
+    // Kullanıcı verilerini veritabanına kaydet
+    await database().ref(`users/${user.uid}`).set({
       email: email,
       name: name,
       surname: surname,
       role: 'admin',
-      cafename: cafeName, // Artık süper adminin cafename'i yerine parametre olarak gelen cafeName'i kullanıyoruz
+      cafename: cafeName,
       createdAt: database.ServerValue.TIMESTAMP,
     });
 
-    return {
-      success: true,
-      message: 'Admin başarıyla eklendi/güncellendi.',
-    };
+    return {success: true, user};
   } catch (error) {
+    console.error('Admin ekleme hatası:', error);
     return {success: false, error: error.message};
   }
 };

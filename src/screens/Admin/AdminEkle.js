@@ -11,7 +11,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {addAdmin} from '../../config/firebase';
-import { add_user_icon, email_icon, eye, eye_off, password_icon } from '../../assets/icons';
+import {
+  add_user_icon,
+  email_icon,
+  eye,
+  eye_off,
+  password_icon,
+} from '../../assets/icons';
 
 const AdminEkle = ({cafeName}) => {
   const [email, setEmail] = useState('');
@@ -43,10 +49,14 @@ const AdminEkle = ({cafeName}) => {
         setName('');
         setSurname('');
       } else {
-        Alert.alert('Hata', result.error);
+        Alert.alert(
+          'Hata',
+          result.error || 'Admin eklenirken bir hata oluştu.',
+        );
       }
     } catch (error) {
-      Alert.alert('Hata', error.message);
+      console.error('Admin ekleme hatası:', error);
+      Alert.alert('Hata', 'Admin eklenirken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -77,14 +87,7 @@ const AdminEkle = ({cafeName}) => {
         <TouchableOpacity
           style={styles.eyeButton}
           onPress={() => setShowPassword(!showPassword)}>
-          <Image
-            source={
-              showPassword
-                ? eye_off
-                : eye
-            }
-            style={styles.eyeIcon}
-          />
+          <Image source={showPassword ? eye_off : eye} style={styles.eyeIcon} />
         </TouchableOpacity>
       )}
     </View>
@@ -142,10 +145,7 @@ const AdminEkle = ({cafeName}) => {
             <ActivityIndicator color="#FFF" />
           ) : (
             <>
-              <Image
-                source={add_user_icon}
-                style={styles.addIcon}
-              />
+              <Image source={add_user_icon} style={styles.addIcon} />
               <Text style={styles.addButtonText}>Admin Ekle</Text>
             </>
           )}

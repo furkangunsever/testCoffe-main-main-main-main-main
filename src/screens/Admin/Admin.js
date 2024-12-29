@@ -8,25 +8,44 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import QRScanner from './QRScanner';
 import AdminHome from './AdminHome'; // Mevcut Admin içeriğini buraya taşıyacağız
 import auth from '@react-native-firebase/auth';
-import { cıkıs_icon, home_icon, qr_icon } from '../../assets/icons';
+import {cıkıs_icon, home_icon, qr_icon} from '../../assets/icons';
 
 const Tab = createBottomTabNavigator();
 
 const Admin = () => {
-  const handleLogout = async () => {
-    try {
-      await auth().signOut();
-      // Çıkış işlemi Firebase tarafından handle edilecek
-    } catch (error) {
-      console.error('Çıkış yapılırken hata:', error);
-      Alert.alert(
-        'Hata',
-        'Çıkış yapılırken bir hata oluştu. Lütfen tekrar deneyin.',
-      );
-    }
+  const navigation = useNavigation();
+
+  const handleLogout = () => {
+    Alert.alert('Çıkış Yap', 'Çıkış yapmak istediğinizden emin misiniz?', [
+      {
+        text: 'İptal',
+        style: 'cancel',
+      },
+      {
+        text: 'Çıkış Yap',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await auth().signOut();
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
+          } catch (error) {
+            console.error('Çıkış hatası:', error);
+            // Hata alınsa bile Login sayfasına yönlendir
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -34,10 +53,7 @@ const Admin = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Admin Panel</Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Image
-            source={cıkıs_icon}
-            style={styles.logoutIcon}
-          />
+          <Image source={cıkıs_icon} style={styles.logoutIcon} />
         </TouchableOpacity>
       </View>
 

@@ -71,18 +71,14 @@ const SuperAdmin = () => {
         style: 'destructive',
         onPress: async () => {
           try {
-            const currentUser = auth().currentUser;
-
-            if (currentUser) {
-              await auth().signOut();
-            }
-
+            await auth().signOut();
             navigation.reset({
               index: 0,
               routes: [{name: 'Login'}],
             });
           } catch (error) {
             console.error('Çıkış hatası:', error);
+            // Hata alınsa bile Login sayfasına yönlendir
             navigation.reset({
               index: 0,
               routes: [{name: 'Login'}],
