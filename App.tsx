@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, View} from 'react-native';
+import {View} from 'react-native';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,7 +12,6 @@ const App = () => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isFirstLaunch, setIsFirstLaunch] = useState(true);
-  const [isRoleLoading, setIsRoleLoading] = useState(true);
   const [isFirstTime, setIsFirstTime] = useState(true);
 
   // Uygulama ilk kez açılıyor mu kontrolü
@@ -21,11 +20,9 @@ const App = () => {
       try {
         const hasLaunched = await AsyncStorage.getItem('hasLaunched');
         if (hasLaunched === null) {
-          // İlk kez açılıyor
           await AsyncStorage.setItem('hasLaunched', 'true');
           setIsFirstTime(true);
         } else {
-          // Daha önce açılmış
           setIsFirstTime(false);
         }
         setIsFirstLaunch(false);
@@ -38,35 +35,29 @@ const App = () => {
     checkFirstLaunch();
   }, []);
 
-  // Handle user state changes
-  async function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
-    setUser(user);
-
-    if (user) {
-      setIsRoleLoading(true);
+  // Auth state ve kullanıcı rolü kontrolü
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(async userState => {
       try {
-        const snapshot = await database()
-          .ref(`users/${user.uid}`)
-          .once('value');
-
-        const userData = snapshot.val();
-        setUserRole(userData?.role || 'user');
+        if (userState) {
+          const snapshot = await database()
+            .ref(`users/${userState.uid}`)
+            .once('value');
+          const userData = snapshot.val();
+          setUserRole(userData?.role || 'user');
+          setUser(userState);
+        } else {
+          setUserRole(null);
+          setUser(null);
+        }
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        console.error('Auth state change error:', error);
         setUserRole('user');
       } finally {
-        setIsRoleLoading(false);
+        setInitializing(false);
       }
-    } else {
-      setUserRole(null);
-      setIsRoleLoading(false);
-    }
+    });
 
-    if (initializing) setInitializing(false);
-  }
-
-  useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber;
   }, []);
 
@@ -74,18 +65,8 @@ const App = () => {
     NotificationService.initialize();
   }, []);
 
-  if (initializing || isRoleLoading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#FFF',
-        }}>
-        <ActivityIndicator size="large" color="#4A3428" />
-      </View>
-    );
+  if (initializing) {
+    return <View style={{flex: 1, backgroundColor: '#FFF'}} />;
   }
 
   return (

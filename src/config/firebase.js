@@ -207,7 +207,7 @@ export const signOut = async () => {
     return {success: true};
   } catch (error) {
     console.error('Çıkış hatası:', error);
-    return {success: true}; // Hata olsa bile başarılı döndür
+    throw error; // Hatayı yukarı fırlat
   }
 };
 

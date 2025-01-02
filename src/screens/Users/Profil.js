@@ -82,20 +82,20 @@ const Profil = ({navigation}) => {
         style: 'destructive',
         onPress: async () => {
           try {
-            const currentUser = auth().currentUser;
+            // Önce kayıtlı hesap bilgilerini temizle
+            await AsyncStorage.multiRemove(['savedAccounts', 'selectedCafe']);
 
-            await AsyncStorage.removeItem('selectedCafe');
+            // Firebase'den çıkış yap
+            await signOut();
 
-            if (currentUser) {
-              await auth().signOut();
-            }
-
+            // Login sayfasına yönlendir ve stack'i temizle
             navigation.reset({
               index: 0,
               routes: [{name: 'Login'}],
             });
           } catch (error) {
             console.error('Çıkış hatası:', error);
+            // Hata olsa bile login sayfasına yönlendir
             navigation.reset({
               index: 0,
               routes: [{name: 'Login'}],

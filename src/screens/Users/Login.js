@@ -72,6 +72,65 @@ const Login = ({navigation}) => {
     }
   };
 
+  // Uygulama açıldığında kayıtlı hesabı kontrol et
+  useEffect(() => {
+    checkSavedAccount();
+  }, []);
+
+  const checkSavedAccount = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('savedAccounts');
+      if (saved) {
+        const accounts = JSON.parse(saved);
+        if (accounts.length > 0) {
+          const lastAccount = accounts[0]; // En son kaydedilen hesap
+          setEmail(lastAccount.email);
+          setPassword(lastAccount.password);
+          // Otomatik giriş yap
+          handleAutoLogin(lastAccount.email, lastAccount.password);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking saved account:', error);
+    }
+  };
+
+  const handleAutoLogin = async (savedEmail, savedPassword) => {
+    try {
+      setLoading(true);
+      const result = await signIn(savedEmail, savedPassword);
+
+      if (result.success) {
+        const userRole = result.userData?.role || 'user';
+        let targetRoute = 'Kafeler';
+
+        if (userRole === 'superadmin') {
+          targetRoute = 'SuperAdmin';
+        } else if (userRole === 'admin') {
+          targetRoute = 'AdminScreen';
+        }
+
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: targetRoute,
+              params: {
+                initialLogin: true,
+              },
+            },
+          ],
+        });
+      } else {
+        // Otomatik giriş başarısız olursa sessizce devam et
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Auto login error:', error);
+      setLoading(false);
+    }
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Hata', 'Lütfen tüm alanları doldurunuz.');
@@ -111,11 +170,13 @@ const Login = ({navigation}) => {
         return;
       }
 
-      // Kullanıcı rolünü kontrol et
-      const userRole = result.userData?.role || 'user';
+      // Beni hatırla seçiliyse hesabı kaydet
+      if (rememberMe) {
+        await saveAccount(email, password);
+      }
 
-      // Giriş başarılı olduğunda navigation stack'i temizle ve yeni route'a yönlendir
-      let targetRoute = 'Kafeler'; // Varsayılan route
+      const userRole = result.userData?.role || 'user';
+      let targetRoute = 'Kafeler';
 
       if (userRole === 'superadmin') {
         targetRoute = 'SuperAdmin';
@@ -123,12 +184,6 @@ const Login = ({navigation}) => {
         targetRoute = 'AdminScreen';
       }
 
-      // Başarılı giriş durumunda ve rememberMe seçiliyse hesabı kaydet
-      if (rememberMe) {
-        await saveAccount(email, password);
-      }
-
-      // Navigation stack'i temizle ve yeni route'a yönlendir
       navigation.reset({
         index: 0,
         routes: [
@@ -143,7 +198,6 @@ const Login = ({navigation}) => {
     } catch (error) {
       console.error('Login error:', error);
       Alert.alert('Hata', 'Giriş yapılırken bir hata oluştu.');
-    } finally {
       setLoading(false);
     }
   };

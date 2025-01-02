@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -23,13 +23,16 @@ const SplashTwo = ({navigation}) => {
     navigation.replace('Login');
   };
 
-  const handleScroll = event => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const page = Math.round(offsetX / width);
-    if (page !== currentPage) {
-      setCurrentPage(page);
-    }
-  };
+  const handleScroll = useCallback(
+    event => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const page = Math.round(offsetX / width);
+      if (page !== currentPage) {
+        setCurrentPage(page);
+      }
+    },
+    [currentPage],
+  );
 
   const handleNext = async () => {
     if (currentPage < 2) {
@@ -52,8 +55,11 @@ const SplashTwo = ({navigation}) => {
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScroll}
-        scrollEventThrottle={16}>
+        onScroll={handleScroll}
+        scrollEventThrottle={32}
+        bounces={false}
+        overScrollMode="never"
+        decelerationRate="fast">
         <FirstPage handleSkip={handleSkip} />
         <SecondPage handleSkip={handleSkip} />
         <ThreePage handleSkip={handleSkip} />
