@@ -13,6 +13,7 @@ import QRScanner from './QRScanner';
 import AdminHome from './AdminHome'; // Mevcut Admin içeriğini buraya taşıyacağız
 import auth from '@react-native-firebase/auth';
 import {cıkıs_icon, home_icon, qr_icon} from '../../assets/icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,32 +21,45 @@ const Admin = () => {
   const navigation = useNavigation();
 
   const handleLogout = () => {
-    Alert.alert('Çıkış Yap', 'Çıkış yapmak istediğinizden emin misiniz?', [
-      {
-        text: 'İptal',
-        style: 'cancel',
-      },
-      {
-        text: 'Çıkış Yap',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await auth().signOut();
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'Login'}],
-            });
-          } catch (error) {
-            console.error('Çıkış hatası:', error);
-            // Hata alınsa bile Login sayfasına yönlendir
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'Login'}],
-            });
-          }
+    Alert.alert(
+      'Çıkış',
+      'Çıkış yapmak istediğinize emin misiniz?',
+      [
+        {
+          text: 'Hayır',
+          style: 'cancel',
         },
-      },
-    ]);
+        {
+          text: 'Evet',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // AsyncStorage'dan tüm verileri temizle
+              await AsyncStorage.clear();
+
+              // Firebase oturumunu kapat
+              await auth().signOut();
+
+              // Navigation'ı sıfırla ve Login sayfasına yönlendir
+              navigation.reset({
+                index: 0,
+                routes: [{name: 'Login'}],
+              });
+            } catch (error) {
+              console.error('Çıkış hatası:', error);
+              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu');
+
+              // Hata olsa bile Login sayfasına yönlendir
+              navigation.reset({
+                index: 0,
+                routes: [{name: 'Login'}],
+              });
+            }
+          },
+        },
+      ],
+      {cancelable: false},
+    );
   };
 
   return (
