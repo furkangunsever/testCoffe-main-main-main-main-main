@@ -9,14 +9,20 @@ import {
   View,
   Text,
 } from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  CommonActions,
+} from '@react-navigation/native';
 import AdminEkle from './AdminEkle';
 import Adminler from './Adminler';
 import QRScanner from './QRScanner';
 import SuperAdminHome from './SuperAdminHome';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
+import {signOut} from '../../config/firebase';
 import {cıkıs_icon, home_icon, profile_icon, qr_icon} from '../../assets/icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Tab = createBottomTabNavigator();
 
@@ -28,12 +34,21 @@ const SuperAdmin = () => {
   useEffect(() => {
     const getCurrentUserCafeName = async () => {
       try {
-        const userId = auth().currentUser.uid;
-        const snapshot = await database().ref(`users/${userId}`).once('value');
+        const currentUser = auth().currentUser;
+        if (!currentUser) {
+          console.log('Kullanıcı oturumu bulunamadı');
+          return;
+        }
+
+        const snapshot = await database()
+          .ref(`users/${currentUser.uid}`)
+          .once('value');
 
         const userData = snapshot.val();
         if (userData?.cafename) {
           setCafeName(userData.cafename);
+        } else {
+          console.log('Cafe name bulunamadı');
         }
       } catch (error) {
         console.error('Cafe name alınırken hata:', error);
@@ -61,39 +76,48 @@ const SuperAdmin = () => {
   );
 
   const handleLogout = () => {
-    Alert.alert('Çıkış Yap', 'Çıkış yapmak istediğinizden emin misiniz?', [
-      {
-        text: 'İptal',
-        style: 'cancel',
-      },
-      {
-        text: 'Çıkış Yap',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await auth().signOut();
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'Login'}],
-            });
-          } catch (error) {
-            console.error('Çıkış hatası:', error);
-            // Hata alınsa bile Login sayfasına yönlendir
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'Login'}],
-            });
-          }
+    Alert.alert(
+      'Çıkış',
+      'Çıkış yapmak istediğinize emin misiniz?',
+      [
+        {
+          text: 'Hayır',
+          style: 'cancel',
         },
-      },
-    ]);
+        {
+          text: 'Evet',
+          onPress: async () => {
+            try {
+              // AsyncStorage'dan tüm verileri temizle
+              await AsyncStorage.clear();
+
+              // Firebase oturumunu kapat
+              await auth().signOut();
+
+              // Navigation'ı sıfırla
+              navigation.reset({
+                index: 0,
+                routes: [{name: 'Login'}],
+              });
+            } catch (error) {
+              console.error('Çıkış hatası:', error);
+              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu');
+            }
+          },
+        },
+      ],
+      {cancelable: false},
+    );
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Super Admin Panel</Text>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+        <TouchableOpacity
+          onPress={handleLogout}
+          style={styles.logoutButton}
+          activeOpacity={0.7}>
           <Image source={cıkıs_icon} style={styles.logoutIcon} />
         </TouchableOpacity>
       </View>
@@ -200,7 +224,8 @@ const styles = StyleSheet.create({
     color: '#4A3428',
   },
   logoutButton: {
-    padding: 5,
+    padding: 10,
+    marginLeft: 10,
   },
   logoutIcon: {
     width: 24,

@@ -40,13 +40,20 @@ const App = () => {
     const subscriber = auth().onAuthStateChanged(async userState => {
       try {
         if (userState) {
+          // Kullanıcı giriş yapmışsa
           const snapshot = await database()
             .ref(`users/${userState.uid}`)
             .once('value');
           const userData = snapshot.val();
+
+          // AsyncStorage'a kullanıcı durumunu kaydet
+          await AsyncStorage.setItem('userLoggedIn', 'true');
           setUserRole(userData?.role || 'user');
           setUser(userState);
         } else {
+          // Kullanıcı çıkış yapmışsa
+          await AsyncStorage.removeItem('userLoggedIn');
+          await AsyncStorage.removeItem('user_data');
           setUserRole(null);
           setUser(null);
         }
@@ -58,7 +65,7 @@ const App = () => {
       }
     });
 
-    return subscriber;
+    return () => subscriber();
   }, []);
 
   useEffect(() => {

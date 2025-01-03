@@ -11,7 +11,15 @@ import {
 } from 'react-native';
 import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
-import { admin_icon, coffee_icon, customer_icon, gift_icon, revenue_icon, reward_icon, sales_icon } from '../../assets/icons';
+import {
+  admin_icon,
+  coffee_icon,
+  customer_icon,
+  gift_icon,
+  revenue_icon,
+  reward_icon,
+  sales_icon,
+} from '../../assets/icons';
 
 const {width} = Dimensions.get('window');
 const CARD_WIDTH = width * 0.45;
@@ -120,10 +128,7 @@ const SuperAdminHome = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTitleContainer}>
-          <Image
-            source={admin_icon}
-            style={styles.headerIcon}
-          />
+          <Image source={admin_icon} style={styles.headerIcon} />
           <Text style={styles.headerSubtitle}>{cafeName}</Text>
         </View>
       </View>
@@ -133,16 +138,9 @@ const SuperAdminHome = () => {
           <Text style={styles.sectionTitle}>Genel Bakış</Text>
           <View style={styles.cardGrid}>
             <StatCard
-              title="Toplam Gelir"
-              value={formatCurrency(stats?.totalRevenue)}
-              subtitle="Bu yıl"
-              icon={revenue_icon}
-            />
-            <StatCard
               title="Müşteriler"
-              value={stats?.totalCustomers}
-              subtitle="Toplam"
-              icon={customer_icon}
+              value={stats?.yearly.coffeeCount || 0}
+              icon={revenue_icon}
             />
           </View>
         </View>
