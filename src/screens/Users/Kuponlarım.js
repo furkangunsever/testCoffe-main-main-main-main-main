@@ -44,6 +44,10 @@ const Kuponlarım = ({navigation}) => {
         let hasUpdates = false;
 
         Object.entries(data).forEach(([key, coupon]) => {
+          if (coupon.cafeName !== selectedCafe) {
+            return;
+          }
+
           const expiryDate = new Date(coupon.expiryDate);
 
           if (expiryDate < currentDate || coupon.isUsed) {
@@ -56,7 +60,6 @@ const Kuponlarım = ({navigation}) => {
             activeCoupons.push({
               id: key,
               ...coupon,
-              cafeName: selectedCafe || coupon.cafeName,
               remainingDays: diffDays,
             });
           }

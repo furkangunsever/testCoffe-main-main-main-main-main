@@ -19,7 +19,6 @@ const CustomModal = ({
   message,
   buttonText = 'Tamam',
   icon,
-  iconTintColor = '#4A3428',
 }) => {
   return (
     <RNModal
@@ -34,7 +33,7 @@ const CustomModal = ({
           {icon && (
             <Image
               source={icon}
-              style={[styles.modalIcon, {tintColor: iconTintColor}]}
+              style={[styles.modalIcon]}
             />
           )}
           <Text style={styles.modalTitle}>{title}</Text>
