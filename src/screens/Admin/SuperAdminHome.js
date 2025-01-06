@@ -85,7 +85,7 @@ const SuperAdminHome = () => {
             monthly: monthlyStats,
             yearly: yearlyStats,
             totalRevenue,
-            totalCustomers: customerCount, // cafeCustomers'dan gelen gerçek müşteri sayısı
+            totalCustomers: customerCount,
           });
           setLoading(false);
         });
@@ -140,8 +140,8 @@ const SuperAdminHome = () => {
           <View style={styles.cardGrid}>
             <StatCard
               title="Müşteriler"
-              value={stats?.yearly.coffeeCount || 0}
-              icon={revenue_icon}
+              value={stats?.totalCustomers || 0}
+              icon={customer_icon}
             />
           </View>
         </View>

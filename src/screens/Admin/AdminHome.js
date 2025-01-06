@@ -157,17 +157,6 @@ const AdminHome = () => {
             />
           </View>
         </View>
-
-        <View style={styles.customerSection}>
-          <Text style={styles.sectionTitle}>Müşteri İstatistikleri</Text>
-          <StatCard
-            title="Toplam Müşteri"
-            value={stats?.totalCustomers || 0}
-            icon={customer_icon}
-            subtitle="Tekil müşteri sayısı"
-            color="#34495E"
-          />
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
