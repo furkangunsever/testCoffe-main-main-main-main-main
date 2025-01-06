@@ -50,51 +50,52 @@ const SuperAdminHome = () => {
       const currentYear = now.getFullYear();
 
       const statsRef = database().ref(`cafeStats/${cafeName}`);
+      const customersRef = database().ref(`cafeCustomers/${cafeName}`);
 
-      statsRef.on('value', snapshot => {
-        const data = snapshot.val() || {};
-        const todayStats = data[today] || {coffeeCount: 0, giftCount: 0};
+      // Müşteri sayısını gerçek zamanlı dinle
+      customersRef.on('value', customersSnapshot => {
+        const customerCount = customersSnapshot.numChildren();
 
-        let monthlyStats = {coffeeCount: 0, giftCount: 0};
-        let yearlyStats = {coffeeCount: 0, giftCount: 0};
-        let totalRevenue = 0;
-        let totalCustomers = new Set();
+        statsRef.on('value', snapshot => {
+          const data = snapshot.val() || {};
+          const todayStats = data[today] || {coffeeCount: 0, giftCount: 0};
 
-        Object.entries(data).forEach(([date, dayData]) => {
-          const [year, month] = date.split('-').map(Number);
+          let monthlyStats = {coffeeCount: 0, giftCount: 0};
+          let yearlyStats = {coffeeCount: 0, giftCount: 0};
+          let totalRevenue = 0;
 
-          if (year === currentYear && month === currentMonth) {
-            monthlyStats.coffeeCount += dayData.coffeeCount || 0;
-            monthlyStats.giftCount += dayData.giftCount || 0;
-          }
+          Object.entries(data).forEach(([date, dayData]) => {
+            const [year, month] = date.split('-').map(Number);
 
-          if (year === currentYear) {
-            yearlyStats.coffeeCount += dayData.coffeeCount || 0;
-            yearlyStats.giftCount += dayData.giftCount || 0;
-          }
+            if (year === currentYear && month === currentMonth) {
+              monthlyStats.coffeeCount += dayData.coffeeCount || 0;
+              monthlyStats.giftCount += dayData.giftCount || 0;
+            }
 
-          // Toplam gelir hesaplama (kahve fiyatı örnek olarak 30TL)
-          totalRevenue += (dayData.coffeeCount || 0) * 30;
+            if (year === currentYear) {
+              yearlyStats.coffeeCount += dayData.coffeeCount || 0;
+              yearlyStats.giftCount += dayData.giftCount || 0;
+            }
 
-          // Benzersiz müşteri sayısı
-          if (dayData.users) {
-            Object.keys(dayData.users).forEach(userId =>
-              totalCustomers.add(userId),
-            );
-          }
+            totalRevenue += (dayData.coffeeCount || 0) * 30;
+          });
+
+          setStats({
+            today: todayStats,
+            monthly: monthlyStats,
+            yearly: yearlyStats,
+            totalRevenue,
+            totalCustomers: customerCount, // cafeCustomers'dan gelen gerçek müşteri sayısı
+          });
+          setLoading(false);
         });
-
-        setStats({
-          today: todayStats,
-          monthly: monthlyStats,
-          yearly: yearlyStats,
-          totalRevenue,
-          totalCustomers: totalCustomers.size,
-        });
-        setLoading(false);
       });
 
-      return () => statsRef.off();
+      // Cleanup function
+      return () => {
+        statsRef.off();
+        customersRef.off();
+      };
     };
 
     fetchStats();

@@ -9,6 +9,7 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import {addAdmin} from '../../config/firebase';
 import {
@@ -43,7 +44,6 @@ const AdminEkle = ({cafeName}) => {
       const result = await addAdmin(email, password, name, surname, cafeName);
       if (result.success) {
         Alert.alert('Başarılı', 'Admin başarıyla eklendi.');
-        // Form alanlarını temizle
         setEmail('');
         setPassword('');
         setName('');
@@ -62,37 +62,6 @@ const AdminEkle = ({cafeName}) => {
     }
   };
 
-  const InputField = ({
-    icon,
-    placeholder,
-    value,
-    onChangeText,
-    secureTextEntry,
-    keyboardType,
-    autoCapitalize,
-  }) => (
-    <View style={styles.inputContainer}>
-      <Image source={icon} style={styles.inputIcon} />
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        value={value}
-        onChangeText={onChangeText}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize || 'none'}
-        placeholderTextColor="#999"
-      />
-      {placeholder === 'Şifre' && (
-        <TouchableOpacity
-          style={styles.eyeButton}
-          onPress={() => setShowPassword(!showPassword)}>
-          <Image source={showPassword ? eye_off : eye} style={styles.eyeIcon} />
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -104,38 +73,81 @@ const AdminEkle = ({cafeName}) => {
 
       <ScrollView
         style={styles.formContainer}
-        showsVerticalScrollIndicator={false}>
-        <InputField
-          icon={add_user_icon}
-          placeholder="Ad"
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="words"
-        />
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="always"
+        keyboardDismissMode="none">
+        <View style={styles.inputContainer}>
+          <Image source={add_user_icon} style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Ad"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            autoCorrect={false}
+            placeholderTextColor="#999"
+          />
+        </View>
 
-        <InputField
-          icon={add_user_icon}
-          placeholder="Soyad"
-          value={surname}
-          onChangeText={setSurname}
-          autoCapitalize="words"
-        />
+        <View style={styles.inputContainer}>
+          <Image source={add_user_icon} style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Soyad"
+            value={surname}
+            onChangeText={setSurname}
+            autoCapitalize="words"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            autoCorrect={false}
+            placeholderTextColor="#999"
+          />
+        </View>
 
-        <InputField
-          icon={email_icon}
-          placeholder="E-mail"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
+        <View style={styles.inputContainer}>
+          <Image source={email_icon} style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="E-mail"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            autoCorrect={false}
+            placeholderTextColor="#999"
+          />
+        </View>
 
-        <InputField
-          icon={password_icon}
-          placeholder="Şifre"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={!showPassword}
-        />
+        <View style={styles.inputContainer}>
+          <Image source={password_icon} style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Şifre"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            returnKeyType="done"
+            blurOnSubmit={true}
+            autoCorrect={false}
+            placeholderTextColor="#999"
+            onSubmitEditing={() => {
+              Keyboard.dismiss();
+              handleAddAdmin();
+            }}
+          />
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={() => setShowPassword(!showPassword)}>
+            <Image
+              source={showPassword ? eye_off : eye}
+              style={styles.eyeIcon}
+            />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={[styles.addButton, loading && styles.disabledButton]}

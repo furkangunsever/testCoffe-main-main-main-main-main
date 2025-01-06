@@ -15,10 +15,8 @@ import {
 import {signIn} from '../../config/firebase';
 import auth from '@react-native-firebase/auth';
 import {splash_coffe} from '../../assets/images';
-import {eye, eye_off, google_icon} from '../../assets/icons';
+import {eye, eye_off} from '../../assets/icons';
 import database from '@react-native-firebase/database';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import {signInWithGoogle} from '../../config/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({navigation}) => {
@@ -145,6 +143,41 @@ const Login = ({navigation}) => {
 
       if (!result.success) {
         let errorMessage = 'Giriş yapılamadı.';
+
+        // Email doğrulama kontrolü
+        if (result.error === 'EMAIL_NOT_VERIFIED') {
+          Alert.alert(
+            'Email Doğrulanmadı',
+            'Lütfen email adresinize gönderilen doğrulama linkine tıklayın.',
+            [
+              {
+                text: 'Tamam',
+                onPress: () => {},
+              },
+              {
+                text: 'Tekrar Gönder',
+                onPress: async () => {
+                  try {
+                    // Kullanıcıyı tekrar giriş yaptır
+                    const userCredential =
+                      await auth().signInWithEmailAndPassword(email, password);
+                    // Doğrulama mailini tekrar gönder
+                    await userCredential.user.sendEmailVerification();
+                    Alert.alert(
+                      'Başarılı',
+                      'Doğrulama maili tekrar gönderildi. Lütfen mail kutunuzu kontrol edin.',
+                    );
+                  } catch (error) {
+                    Alert.alert('Hata', 'Doğrulama maili gönderilemedi.');
+                  }
+                },
+              },
+            ],
+          );
+          setLoading(false);
+          return;
+        }
+
         if (result.error?.code) {
           switch (result.error.code) {
             case 'auth/invalid-email':
@@ -204,65 +237,6 @@ const Login = ({navigation}) => {
 
   const handleRegister = () => {
     navigation.navigate('Kayıt');
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setLoading(true);
-
-      // Google Sign-In işlemi başlatılıyor
-      const result = await signInWithGoogle();
-
-      if (!result.success) {
-        if (result.error?.code === 'SIGN_IN_CANCELLED') {
-          // Kullanıcı işlemi iptal etti
-          return;
-        }
-        Alert.alert('Hata', 'Google ile giriş yapılırken bir hata oluştu.');
-        return;
-      }
-
-      // Kullanıcı Firebase'e kaydedildi, rolünü kontrol et
-      const userSnapshot = await database()
-        .ref(`users/${result.user.uid}`)
-        .once('value');
-
-      const userData = userSnapshot.val();
-      const userRole = userData?.role || 'user';
-
-      // Başarılı giriş mesajı
-      Alert.alert(
-        'Başarılı',
-        `${result.user.displayName || 'Kullanıcı'} olarak giriş yapıldı.`,
-        [
-          {
-            text: 'Tamam',
-            onPress: () => {
-              // Kullanıcı rolüne göre yönlendirme
-              let targetRoute = 'Kafeler';
-              if (userRole === 'superadmin') {
-                targetRoute = 'SuperAdmin';
-              } else if (userRole === 'admin') {
-                targetRoute = 'AdminScreen';
-              }
-
-              navigation.reset({
-                index: 0,
-                routes: [{name: targetRoute}],
-              });
-            },
-          },
-        ],
-      );
-    } catch (error) {
-      console.error('Google Sign-In Error:', error);
-      Alert.alert(
-        'Hata',
-        'Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.',
-      );
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Email input için önerileri göster/gizle
@@ -404,18 +378,6 @@ const Login = ({navigation}) => {
             <Text style={styles.loginButtonText}>
               {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
             </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleSignIn}
-            disabled={loading}>
-            <View style={styles.googleButtonContent}>
-              <Image source={google_icon} style={styles.googleIcon} />
-              <Text style={styles.googleButtonText}>
-                {loading ? 'Giriş yapılıyor...' : 'Google ile Giriş Yap'}
-              </Text>
-            </View>
           </TouchableOpacity>
 
           <View style={styles.registerContainer}>
@@ -573,37 +535,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     tintColor: '#666',
-  },
-  googleButton: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#4A3428',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-  },
-  googleButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-  },
-  googleButtonText: {
-    color: '#4A3428',
-    fontSize: 16,
-    fontWeight: '600',
   },
   inputContainer: {
     position: 'relative',
